@@ -15,7 +15,7 @@ export async function extractAddresses(files) {
     formData.append('files', file);
   });
 
-  const response = await apiClient.post('/api/routes/extract', formData, {
+  const response = await apiClient.post('/api/routes/extract?v=2', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },

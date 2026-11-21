@@ -149,18 +149,30 @@ export default function App() {
     try {
       const extractionResult = await extractAddresses(files);
 
-      // Support new AddressExtractionResponse or legacy array
-      const deliveryAddrs = Array.isArray(extractionResult)
-        ? extractionResult
-        : (extractionResult?.deliveryAddresses || extractionResult?.addresses || []);
+      // Robust extraction of delivery addresses (supports v2 AddressExtractionResponse, legacy Array, or object alias)
+      let rawDelivery = [];
+      if (Array.isArray(extractionResult)) {
+        rawDelivery = extractionResult;
+      } else if (Array.isArray(extractionResult?.deliveryAddresses)) {
+        rawDelivery = extractionResult.deliveryAddresses;
+      } else if (Array.isArray(extractionResult?.addresses)) {
+        rawDelivery = extractionResult.addresses;
+      } else if (typeof extractionResult?.deliveryAddresses === 'string') {
+        rawDelivery = [extractionResult.deliveryAddresses];
+      }
+
+      const deliveryAddrs = rawDelivery
+        .filter((addr) => addr && typeof addr === 'string' && addr.trim().length > 0)
+        .map((addr) => addr.trim());
+
       const primaryFrom = !Array.isArray(extractionResult)
         ? (extractionResult?.primaryFromAddress || null)
         : null;
-      const detectedFroms = !Array.isArray(extractionResult)
-        ? (extractionResult?.fromAddresses || [])
+      const rawFroms = !Array.isArray(extractionResult) && Array.isArray(extractionResult?.fromAddresses)
+        ? extractionResult.fromAddresses
         : [];
 
-      if ((!deliveryAddrs || deliveryAddrs.length === 0) && !primaryFrom) {
+      if (deliveryAddrs.length === 0 && !primaryFrom) {
         setErrorMessage(
           'No addresses could be detected in the uploaded images. You can manually enter stops or try different photos.'
         );
@@ -169,7 +181,7 @@ export default function App() {
       }
 
       // Convert extracted delivery address strings into stop objects
-      const newExtractedStops = (deliveryAddrs || []).map((addr) => ({
+      const newExtractedStops = deliveryAddrs.map((addr) => ({
         originalExtractedText: addr,
         correctedAddress: addr,
         isManuallyEdited: false,
@@ -177,19 +189,22 @@ export default function App() {
 
       // Append new delivery stops, filtering out duplicate addresses
       setStops((prevStops) => {
-        if (!prevStops || prevStops.length === 0) {
+        const safePrev = Array.isArray(prevStops) ? prevStops : [];
+        if (safePrev.length === 0) {
           return newExtractedStops;
         }
 
         const existingAddresses = new Set(
-          prevStops.map((s) => (s.correctedAddress || '').trim().toUpperCase())
+          safePrev
+            .filter((s) => s && s.correctedAddress)
+            .map((s) => String(s.correctedAddress).trim().toUpperCase())
         );
 
         const uniqueNew = newExtractedStops.filter(
           (s) => !existingAddresses.has(s.correctedAddress.trim().toUpperCase())
         );
 
-        return [...prevStops, ...uniqueNew];
+        return [...safePrev, ...uniqueNew];
       });
 
       // 1. If From location is available, populate on the from field
@@ -198,15 +213,18 @@ export default function App() {
       }
 
       // 2. Add all detected From locations as presets
-      if (detectedFroms && detectedFroms.length > 0) {
+      if (rawFroms.length > 0) {
         setPresets((prevPresets) => {
-          const current = prevPresets || [];
+          const current = Array.isArray(prevPresets) ? prevPresets : [];
           const existingAddresses = new Set(
-            current.map((p) => (p.address || '').trim().toLowerCase())
+            current
+              .filter((p) => p && p.address)
+              .map((p) => String(p.address).trim().toLowerCase())
           );
 
           const toAdd = [];
-          detectedFroms.forEach((item) => {
+          rawFroms.forEach((item) => {
+            if (!item) return;
             const addr = (typeof item === 'string' ? item : item.address || '').trim();
             const label = (typeof item === 'object' && item.label ? item.label : addr.split(',')[0]).trim();
             if (addr && !existingAddresses.has(addr.toLowerCase())) {
@@ -223,9 +241,9 @@ export default function App() {
         });
       }
 
-      if (primaryFrom && detectedFroms.length > 1) {
+      if (primaryFrom && rawFroms.length > 1) {
         setInfoMessage(
-          `Detected ${detectedFroms.length} origin facilities. Selected "${primaryFrom.split(',')[0]}" as Starting Origin, and added all ${detectedFroms.length} to Presets.`
+          `Detected ${rawFroms.length} origin facilities. Selected "${primaryFrom.split(',')[0]}" as Starting Origin, and added all ${rawFroms.length} to Presets.`
         );
       } else if (primaryFrom) {
         setInfoMessage(

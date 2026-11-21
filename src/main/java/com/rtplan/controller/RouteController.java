@@ -33,17 +33,27 @@ public class RouteController {
      * @return List of extracted address strings
      */
     @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<AddressExtractionResponse> extractAddresses(
+    public ResponseEntity<?> extractAddresses(
             @RequestParam(value = "files", required = false) MultipartFile[] files,
-            @RequestParam(value = "screenshots", required = false) MultipartFile[] screenshots) {
+            @RequestParam(value = "screenshots", required = false) MultipartFile[] screenshots,
+            @RequestParam(value = "v", required = false) String version) {
 
         MultipartFile[] targetFiles = (files != null && files.length > 0) ? files : screenshots;
         if (targetFiles == null || targetFiles.length == 0) {
             throw new IllegalArgumentException("Upload at least one screenshot file via 'files' or 'screenshots'");
         }
 
-        log.info("Received request to extract addresses from {} image(s)", targetFiles.length);
+        log.info("Received request to extract addresses from {} image(s) (version: {})", targetFiles.length, version);
         AddressExtractionResponse response = geminiExtractionService.extractAddressesFromImages(targetFiles);
+
+        // If client is legacy (no v=2 requested), return plain array for 100% backward compatibility
+        if (version == null || !version.equals("2")) {
+            log.info("Serving legacy array response with {} addresses", response.getDeliveryAddresses().size());
+            return ResponseEntity.ok()
+                    .header("X-Primary-From-Address", response.getPrimaryFromAddress() != null ? response.getPrimaryFromAddress() : "")
+                    .body(response.getDeliveryAddresses());
+        }
+
         return ResponseEntity.ok(response);
     }
 
