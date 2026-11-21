@@ -1,6 +1,6 @@
 # RTPlan - Multi-Stop Logistics & Routing API
 
-Spring Boot 3.x REST API middleman for multi-stop logistics routing. Designed to serve both a **React Web Frontend (Phase 1)** and a **Native Kotlin Android App (Phase 2)**.
+Spring Boot 4.x REST API middleman for multi-stop logistics routing. Designed to serve both a **React Web Frontend (Phase 1)** and a **Native Kotlin Android App (Phase 2)**.
 
 ## Core Features
 1. **Gemini 1.5 Flash OCR Address Extraction**:
@@ -17,11 +17,12 @@ Spring Boot 3.x REST API middleman for multi-stop logistics routing. Designed to
 ---
 
 ## Tech Stack
-- **Java 21 LTS**
-- **Spring Boot 3.3.5** (`spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`)
+- **Java 25 LTS**
+- **Spring Boot 4.2.0** (`spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`)
 - **Microsoft SQL Server JDBC Driver** (`com.microsoft.sqlserver:mssql-jdbc`)
-- **Project Lombok**
-- **Spring 6 RestClient**
+- **Project Lombok** (1.18.48)
+- **Jackson 3** (`tools.jackson`)
+- **Spring 7 RestClient**
 
 ---
 

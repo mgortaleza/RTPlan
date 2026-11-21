@@ -9,12 +9,12 @@ RTPlan is an "API-first" middleman backend designed to service both a **React we
 
 | Component | Technology | Purpose |
 |---|---|---|
-| **Language & Runtime** | Java 17+ (Targeting Java 21 LTS) | Modern LTS Java runtime |
-| **Framework** | Spring Boot 3.3.x | Core DI, Web MVC, and Auto-configuration |
-| **Persistence** | Spring Data JPA / Hibernate 6 | ORM & Repository abstraction |
+| **Language & Runtime** | Java 25 LTS | Modern LTS Java runtime |
+| **Framework** | Spring Boot 4.2.0 | Core DI, Web MVC, and Auto-configuration |
+| **Persistence** | Spring Data JPA / Hibernate | ORM & Repository abstraction |
 | **Database Driver** | `com.microsoft.sqlserver:mssql-jdbc` | Direct connectivity to SQL Server (`db1.ads.netyx.net`) |
-| **HTTP Client** | Spring 6 `RestClient` | High-performance, modern fluent HTTP client for external APIs |
-| **Boilerplate Reduction** | Project Lombok | Auto-generation of getters, setters, builders, loggers |
+| **HTTP Client** | Spring 7 `RestClient` | High-performance, modern fluent HTTP client for external APIs |
+| **Boilerplate Reduction** | Project Lombok (1.18.48) | Auto-generation of getters, setters, builders, loggers |
 | **Validation** | Jakarta Validation (`spring-boot-starter-validation`) | Request body & query parameter constraint checking |
 
 ---
