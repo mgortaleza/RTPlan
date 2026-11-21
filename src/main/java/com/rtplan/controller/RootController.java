@@ -14,7 +14,7 @@ public class RootController {
     public ResponseEntity<Map<String, Object>> getRootStatus() {
         return ResponseEntity.ok(Map.of(
                 "status", "UP",
-                "app", "RTPlan Multi-Stop Logistics & Routing API",
+                "app", "NetYX Route Planner API",
                 "version", "1.0.0-SNAPSHOT",
                 "timestamp", LocalDateTime.now().toString(),
                 "endpoints", Map.of(

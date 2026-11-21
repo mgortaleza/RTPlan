@@ -59,7 +59,7 @@ export default function Step3Drive({
   // Format shareable text message for SMS / email / clipboard
   const buildShareableText = () => {
     const lines = [
-      `🚚 RTPlan Route #${manifestId} - ${routeDate || 'Today'}`,
+      `🚚 NetYX Route Planner - Route #${manifestId} - ${routeDate || 'Today'}`,
       `Driver: ${driverName || 'Assigned Driver'} | Total Stops: ${stops.length}`,
       '',
     ];
@@ -112,7 +112,7 @@ export default function Step3Drive({
   // 3. Share via Email
   const handleShareEmail = () => {
     const text = buildShareableText();
-    const subject = `RTPlan Route #${manifestId} - ${routeDate || 'Today'}`;
+    const subject = `NetYX Route Planner - Route #${manifestId} - ${routeDate || 'Today'}`;
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
   };
 
@@ -122,7 +122,7 @@ export default function Step3Drive({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `RTPlan Route #${manifestId}`,
+          title: `NetYX Route Planner - Route #${manifestId}`,
           text: text,
         });
       } catch (err) {

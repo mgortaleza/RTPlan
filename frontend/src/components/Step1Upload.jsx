@@ -4,7 +4,6 @@ import {
   ImagePlus,
   X,
   Sparkles,
-  FileText,
   CheckCircle2,
   Loader2,
   ArrowRight,
@@ -12,6 +11,7 @@ import {
   Navigation,
   Trash2,
   History,
+  PenLine,
 } from 'lucide-react';
 
 export default function Step1Upload({
@@ -24,6 +24,7 @@ export default function Step1Upload({
   onGoToDrive,
   onClearStops,
   onOpenRecentRoutes,
+  onStartManualEntry,
   isLoading,
 }) {
   const fileInputRef = useRef(null);
@@ -83,7 +84,7 @@ export default function Step1Upload({
                     {stops.length} Stop{stops.length > 1 ? 's' : ''} Already Loaded
                   </h3>
                   <p className="text-[11px] text-emerald-800">
-                    Your scanned addresses are saved. No need to rescan!
+                    Your addresses are saved. No need to rescan!
                   </p>
                 </div>
               </div>
@@ -138,7 +139,7 @@ export default function Step1Upload({
               <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                 {hasExistingStops
                   ? 'Take photo screenshots to append additional delivery addresses to your current list, or proceed directly to verify.'
-                  : 'Take photo screenshots of your delivery manifests or app tickets. Gemini OCR will extract all customer addresses.'}
+                  : 'Take photo screenshots of your delivery manifests or app tickets, or enter addresses manually below.'}
               </p>
             </div>
           </div>
@@ -242,13 +243,38 @@ export default function Step1Upload({
           </div>
         )}
 
-        {/* Quick Options (Recent Routes & Sample Data) */}
+        {/* Action Options: Manual Entry & Recent Routes */}
         <div className="pt-2 border-t border-slate-200 space-y-2">
+          {/* Manual Entry Option */}
+          {onStartManualEntry && (
+            <button
+              type="button"
+              onClick={onStartManualEntry}
+              className="w-full flex items-center justify-between p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition-all group shadow-2xs"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <PenLine className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                    Enter Addresses Manually (No Photos)
+                  </p>
+                  <p className="text-[11px] text-slate-500">
+                    Skip photo scanning and type in delivery stops directly
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-700 transition-colors" />
+            </button>
+          )}
+
+          {/* Recall Recent Route Option */}
           {onOpenRecentRoutes && (
             <button
               type="button"
               onClick={onOpenRecentRoutes}
-              className="w-full flex items-center justify-between p-3.5 rounded-xl bg-indigo-50/70 hover:bg-indigo-50 border border-indigo-200 text-left transition-all group"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl bg-indigo-50/70 hover:bg-indigo-50 border border-indigo-200 text-left transition-all group shadow-2xs"
             >
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
@@ -309,14 +335,26 @@ export default function Step1Upload({
             <ArrowRight className="w-4 h-4" />
           </button>
         ) : (
-          <button
-            type="button"
-            disabled
-            className="w-full min-h-[50px] rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center space-x-2 bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none"
-          >
-            <Sparkles className="w-5 h-5 text-slate-400" />
-            <span>Select Screenshots to Begin</span>
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 min-h-[48px] rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs flex items-center justify-center space-x-1.5 transition-colors"
+            >
+              <UploadCloud className="w-4 h-4" />
+              <span>Select Photos</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onStartManualEntry}
+              className="flex-1 min-h-[48px] rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-indigo-600/20 active:scale-[0.98] transition-all"
+            >
+              <PenLine className="w-4 h-4" />
+              <span>Manual Entry</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         )}
       </div>
     </div>

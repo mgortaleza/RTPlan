@@ -64,7 +64,7 @@ export default function LoginPage({ onLoginSuccess }) {
           </div>
           <div>
             <h1 className="text-xl font-black tracking-tight text-slate-900 leading-tight">
-              RT<span className="text-indigo-600">Plan</span>
+              NetYX <span className="text-indigo-600">Route Planner</span>
             </h1>
             <p className="text-xs text-slate-500 font-medium">
               Multi-Stop Delivery Dispatch
@@ -173,7 +173,7 @@ export default function LoginPage({ onLoginSuccess }) {
             ) : (
               <>
                 <LogIn className="w-4 h-4" />
-                <span>Sign In to RTPlan</span>
+                <span>Sign In to NetYX Route Planner</span>
               </>
             )}
           </button>

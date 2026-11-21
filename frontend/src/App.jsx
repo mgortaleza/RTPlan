@@ -226,6 +226,22 @@ export default function App() {
     setCurrentStep('drive');
   };
 
+  // Start manual entry directly without scanning photos
+  const handleStartManualEntry = () => {
+    if (!stops || stops.length === 0) {
+      setStops([
+        {
+          originalExtractedText: '',
+          correctedAddress: '',
+          isManuallyEdited: true,
+        },
+      ]);
+    }
+    setErrorMessage(null);
+    setInfoMessage(null);
+    setCurrentStep('verify');
+  };
+
   // Step 2: Optimize route with Google Routes API & Geocoding
   const handleOptimize = async () => {
     const validStops = stops
@@ -333,6 +349,7 @@ export default function App() {
             }}
             onClearStops={handleClearStops}
             onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
+            onStartManualEntry={handleStartManualEntry}
             isLoading={isLoading}
           />
         )}
