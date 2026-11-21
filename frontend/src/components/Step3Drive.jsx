@@ -20,6 +20,9 @@ import {
   MessageSquare,
   Mail,
   Share,
+  CheckCircle2,
+  Clock,
+  RotateCcw,
 } from 'lucide-react';
 import { loadFromStorage, saveToStorage } from '../utils/storage';
 
@@ -39,9 +42,18 @@ export default function Step3Drive({
     return loadFromStorage('opened_legs', []);
   });
 
+  // Track which legs have been marked as completed
+  const [completedLegs, setCompletedLegs] = useState(() => {
+    return loadFromStorage('completed_legs', []);
+  });
+
   useEffect(() => {
     saveToStorage('opened_legs', openedLegs);
   }, [openedLegs]);
+
+  useEffect(() => {
+    saveToStorage('completed_legs', completedLegs);
+  }, [completedLegs]);
 
   if (!manifest) return null;
 
@@ -53,6 +65,20 @@ export default function Step3Drive({
         return [...prev, chunkNum];
       }
       return prev;
+    });
+  };
+
+  // Toggle leg between Completed and In Progress
+  const handleToggleComplete = (chunkNum) => {
+    setCompletedLegs((prev) => {
+      if (prev.includes(chunkNum)) {
+        // Unmark complete (returns to In Progress)
+        return prev.filter((c) => c !== chunkNum);
+      } else {
+        // Mark complete & ensure opened
+        setOpenedLegs((opened) => (opened.includes(chunkNum) ? opened : [...opened, chunkNum]));
+        return [...prev, chunkNum];
+      }
     });
   };
 
@@ -70,8 +96,9 @@ export default function Step3Drive({
       const legEndIdx = Math.min(legStartIdx + 9, stops.length - 1);
       const startAddress = stops[legStartIdx]?.correctedAddress || 'Start';
       const endAddress = stops[legEndIdx]?.correctedAddress || 'Destination';
+      const isDone = completedLegs.includes(chunkNum);
 
-      lines.push(`📍 Leg ${chunkNum} (Stops ${legStartIdx + 1}–${legEndIdx + 1}):`);
+      lines.push(`📍 Leg ${chunkNum} ${isDone ? '[COMPLETED]' : ''} (Stops ${legStartIdx + 1}–${legEndIdx + 1}):`);
       lines.push(`Start: ${startAddress}`);
       lines.push(`End: ${endAddress}`);
       lines.push(`Maps: ${link.googleMapsUrl}`);
@@ -103,7 +130,6 @@ export default function Step3Drive({
   // 2. Share via SMS / Native Text Messaging
   const handleShareSMS = () => {
     const text = buildShareableText();
-    // iOS and Android support sms:?&body=
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const separator = isIOS ? '&' : '?';
     window.location.href = `sms:${separator}body=${encodeURIComponent(text)}`;
@@ -166,8 +192,10 @@ export default function Step3Drive({
               <span className="text-sm font-extrabold text-slate-900">{stops.length}</span>
             </div>
             <div className="bg-white rounded-xl p-2 border border-slate-200/80 shadow-2xs">
-              <span className="block text-[10px] font-semibold text-slate-500">Nav Legs</span>
-              <span className="text-sm font-extrabold text-indigo-600">{links.length}</span>
+              <span className="block text-[10px] font-semibold text-slate-500">Completed</span>
+              <span className="text-sm font-extrabold text-emerald-600">
+                {completedLegs.length}/{links.length}
+              </span>
             </div>
             <div className="bg-white rounded-xl p-2 border border-slate-200/80 shadow-2xs">
               <span className="block text-[10px] font-semibold text-slate-500">Date</span>
@@ -291,8 +319,8 @@ export default function Step3Drive({
               <Navigation className="w-3.5 h-3.5 text-indigo-600" />
               <span>Navigation Legs (9 Stops Max Each)</span>
             </h3>
-            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
-              {openedLegs.length}/{links.length} Started
+            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+              {completedLegs.length}/{links.length} Completed
             </span>
           </div>
 
@@ -304,13 +332,16 @@ export default function Step3Drive({
             const endStop = stops[legEndIdx];
             const stopCountInLeg = Math.max(1, legEndIdx - legStartIdx + 1);
             const isOpened = openedLegs.includes(chunkNum);
+            const isCompleted = completedLegs.includes(chunkNum);
 
             return (
               <div
                 key={link.linkId || idx}
                 className={`bg-white border rounded-2xl p-4 shadow-sm space-y-3 transition-all ${
-                  isOpened
-                    ? 'border-emerald-300 bg-emerald-50/20 ring-1 ring-emerald-200'
+                  isCompleted
+                    ? 'border-emerald-300 bg-emerald-50/25 ring-1 ring-emerald-200'
+                    : isOpened
+                    ? 'border-amber-300 bg-amber-50/20 ring-1 ring-amber-200'
                     : 'border-slate-200'
                 }`}
               >
@@ -319,8 +350,10 @@ export default function Step3Drive({
                   <div className="flex items-center space-x-2">
                     <span
                       className={`w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center ${
-                        isOpened
-                          ? 'bg-emerald-100 text-emerald-700'
+                        isCompleted
+                          ? 'bg-emerald-600 text-white'
+                          : isOpened
+                          ? 'bg-amber-100 text-amber-800'
                           : 'bg-indigo-100 text-indigo-700'
                       }`}
                     >
@@ -332,11 +365,18 @@ export default function Step3Drive({
                   </div>
 
                   <div className="flex items-center space-x-1.5">
-                    {isOpened && (
-                      <span className="text-[10px] text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full font-bold">
-                        ✓ In Progress
+                    {isCompleted ? (
+                      <span className="text-[10px] text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full font-extrabold flex items-center space-x-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        <span>Complete</span>
                       </span>
-                    )}
+                    ) : isOpened ? (
+                      <span className="text-[10px] text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full font-bold flex items-center space-x-1">
+                        <Clock className="w-3 h-3 text-amber-600" />
+                        <span>In Progress</span>
+                      </span>
+                    ) : null}
+
                     <span className="text-[11px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 font-semibold">
                       {stopCountInLeg} Stops
                     </span>
@@ -372,22 +412,64 @@ export default function Step3Drive({
                   </div>
                 </div>
 
-                {/* Prominent Maps Button */}
-                <a
-                  href={link.googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => handleOpenMaps(chunkNum)}
-                  className={`w-full min-h-[48px] rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-sm transition-all active:scale-[0.98] ${
-                    isOpened
-                      ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs'
-                      : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
-                  }`}
-                >
-                  <Navigation className="w-4 h-4 fill-current" />
-                  <span>{isOpened ? 'Reopen in Google Maps' : 'Start in Google Maps'}</span>
-                  <ExternalLink className="w-3.5 h-3.5 opacity-70 ml-1" />
-                </a>
+                {/* Navigation and Completion Actions */}
+                <div className="space-y-2 pt-1">
+                  {/* Maps Button */}
+                  <a
+                    href={link.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => handleOpenMaps(chunkNum)}
+                    className={`w-full min-h-[46px] rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-sm transition-all active:scale-[0.98] ${
+                      isCompleted
+                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                        : isOpened
+                        ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/20'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                    }`}
+                  >
+                    <Navigation className="w-4 h-4 fill-current" />
+                    <span>
+                      {isCompleted
+                        ? 'Reopen in Google Maps'
+                        : isOpened
+                        ? 'Resume in Google Maps'
+                        : 'Start in Google Maps'}
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-70 ml-1" />
+                  </a>
+
+                  {/* Button to change In Progress to Complete */}
+                  {isCompleted ? (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleComplete(chunkNum)}
+                      className="w-full py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] font-bold flex items-center justify-center space-x-1.5 transition-colors"
+                      title="Tap to mark this leg back to In Progress"
+                    >
+                      <RotateCcw className="w-3 h-3 text-emerald-600" />
+                      <span>Leg Completed (Tap to Undo)</span>
+                    </button>
+                  ) : isOpened ? (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleComplete(chunkNum)}
+                      className="w-full min-h-[42px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-sm transition-all shadow-emerald-600/20"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-100" />
+                      <span>Change In Progress to Complete</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleComplete(chunkNum)}
+                      className="w-full py-1.5 text-slate-500 hover:text-slate-800 text-[11px] font-semibold flex items-center justify-center space-x-1 transition-colors"
+                    >
+                      <Check className="w-3 h-3 text-slate-400" />
+                      <span>Mark Complete without Maps</span>
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}

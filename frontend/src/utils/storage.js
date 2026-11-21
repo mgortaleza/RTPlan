@@ -42,7 +42,7 @@ export function removeFromStorage(key) {
 
 export function clearRouteStorage() {
   if (typeof window === 'undefined') return;
-  const keys = ['current_step', 'manifest', 'stops', 'opened_legs'];
+  const keys = ['current_step', 'manifest', 'stops', 'opened_legs', 'completed_legs'];
   keys.forEach((key) => {
     try {
       localStorage.removeItem(`${STORAGE_PREFIX}${key}`);
