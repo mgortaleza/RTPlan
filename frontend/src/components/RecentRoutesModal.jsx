@@ -11,35 +11,67 @@ import {
   AlertCircle,
   MapPin,
   RefreshCw,
+  Trash2,
 } from 'lucide-react';
-import { getRecentManifests } from '../api/routesApi';
+import { getRecentManifests, clearRecentManifests, deleteManifest } from '../api/routesApi';
 
 export default function RecentRoutesModal({
   isOpen,
   onClose,
   onSelectManifest,
+  currentUser,
 }) {
   const [manifests, setManifests] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [error, setError] = useState(null);
+
+  const username = currentUser?.username || currentUser?.fullName;
 
   useEffect(() => {
     if (isOpen) {
       loadRoutes();
     }
-  }, [isOpen]);
+  }, [isOpen, username]);
 
   const loadRoutes = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getRecentManifests();
+      // User-scoped: only retrieve manifests created by or assigned to this user
+      const data = await getRecentManifests(username);
       setManifests(data || []);
     } catch (err) {
       console.error('Failed to load recent manifests:', err);
       setError('Could not retrieve recent routes from server.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleClearAll = async () => {
+    setIsClearing(true);
+    try {
+      await clearRecentManifests(username);
+      setManifests([]);
+      setShowClearConfirm(false);
+    } catch (err) {
+      console.error('Failed to clear manifests:', err);
+      setError('Failed to clear route history.');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleDeleteSingle = async (manifestId, e) => {
+    e.stopPropagation();
+    try {
+      await deleteManifest(manifestId);
+      setManifests((prev) => prev.filter((m) => m.manifestId !== manifestId));
+    } catch (err) {
+      console.error('Failed to delete manifest:', err);
+      setError('Could not delete route.');
     }
   };
 
@@ -55,11 +87,18 @@ export default function RecentRoutesModal({
               <History className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 leading-tight">
-                Recently Used Routes
-              </h3>
+              <div className="flex items-center space-x-1.5">
+                <h3 className="text-base font-bold text-slate-900 leading-tight">
+                  Recent Routes
+                </h3>
+                {username && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                    {username}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500">
-                Recall previously saved delivery manifests
+                Your saved delivery manifests
               </p>
             </div>
           </div>
@@ -79,7 +118,7 @@ export default function RecentRoutesModal({
           {isLoading ? (
             <div className="py-12 flex flex-col items-center justify-center text-slate-500 space-y-2">
               <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-              <p className="text-xs font-medium">Loading saved manifests...</p>
+              <p className="text-xs font-medium">Loading your routes...</p>
             </div>
           ) : error ? (
             <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center justify-between">
@@ -98,9 +137,9 @@ export default function RecentRoutesModal({
           ) : manifests.length === 0 ? (
             <div className="py-12 text-center text-slate-400 space-y-2">
               <History className="w-8 h-8 mx-auto text-slate-300" />
-              <p className="text-xs font-medium text-slate-600">No saved routes found yet</p>
-              <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
-                Once you optimize a delivery route, it will automatically be saved here for quick recall.
+              <p className="text-xs font-bold text-slate-700">No saved routes for {username || 'you'}</p>
+              <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                Routes you create and optimize will automatically appear here for quick recall.
               </p>
             </div>
           ) : (
@@ -126,9 +165,16 @@ export default function RecentRoutesModal({
                       </span>
                     </div>
 
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {m.status || 'OPTIMIZED'}
-                    </span>
+                    <div className="flex items-center space-x-1.5">
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteSingle(m.manifestId, e)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        title="Delete this route"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Route Summary */}
@@ -156,12 +202,6 @@ export default function RecentRoutesModal({
                       <span><strong>{stopCount}</strong> Stops</span>
                       <span>•</span>
                       <span><strong>{legCount}</strong> {legCount === 1 ? 'Leg' : 'Legs'}</span>
-                      {m.driverName && (
-                        <>
-                          <span>•</span>
-                          <span className="truncate max-w-[100px]">{m.driverName}</span>
-                        </>
-                      )}
                     </div>
 
                     <button
@@ -179,17 +219,56 @@ export default function RecentRoutesModal({
           )}
         </div>
 
+        {/* Clear Confirmation Sub-Card */}
+        {showClearConfirm && (
+          <div className="p-4 bg-rose-50 border-t border-rose-200 space-y-2">
+            <p className="text-xs font-bold text-rose-800">
+              Clear all saved routes for {username}?
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowClearConfirm(false)}
+                className="flex-1 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isClearing}
+                onClick={handleClearAll}
+                className="flex-1 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-bold text-white shadow-sm flex items-center justify-center space-x-1"
+              >
+                {isClearing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Yes, Clear All</span>}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Modal Footer */}
         <div className="p-3 border-t border-slate-200 bg-slate-50/80 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={loadRoutes}
-            disabled={isLoading}
-            className="text-xs text-slate-500 hover:text-slate-800 flex items-center space-x-1 font-medium py-1 px-2 transition-colors"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Refresh list</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={loadRoutes}
+              disabled={isLoading}
+              className="text-xs text-slate-500 hover:text-slate-800 flex items-center space-x-1 font-medium py-1 px-2 transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+              <span className="hidden min-[360px]:inline">Refresh</span>
+            </button>
+
+            {manifests.length > 0 && !showClearConfirm && (
+              <button
+                type="button"
+                onClick={() => setShowClearConfirm(true)}
+                className="text-xs text-rose-600 hover:text-rose-700 flex items-center space-x-1 font-semibold py-1 px-2 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear History</span>
+              </button>
+            )}
+          </div>
 
           <button
             type="button"

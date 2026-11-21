@@ -18,6 +18,8 @@ public class OptimizeRouteRequest {
     @NotNull(message = "Driver ID is required")
     private Long driverId;
 
+    private String createdBy;
+
     private LocalDate routeDate;
 
     @NotEmpty(message = "At least one stop must be provided")

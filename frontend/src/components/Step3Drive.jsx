@@ -17,6 +17,9 @@ import {
   ImagePlus,
   AlertCircle,
   History,
+  MessageSquare,
+  Mail,
+  Share,
 } from 'lucide-react';
 import { loadFromStorage, saveToStorage } from '../utils/storage';
 
@@ -53,7 +56,7 @@ export default function Step3Drive({
     });
   };
 
-  // Format shareable text message for SMS / dispatch notes
+  // Format shareable text message for SMS / email / clipboard
   const buildShareableText = () => {
     const lines = [
       `🚚 RTPlan Route #${manifestId} - ${routeDate || 'Today'}`,
@@ -78,16 +81,16 @@ export default function Step3Drive({
     return lines.join('\n');
   };
 
+  // 1. Copy All Links to Clipboard
   const handleCopyAllLinks = async () => {
+    const text = buildShareableText();
     try {
-      const text = buildShareableText();
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      // Fallback for older browsers
       const textarea = document.createElement('textarea');
-      textarea.value = buildShareableText();
+      textarea.value = text;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
@@ -96,6 +99,43 @@ export default function Step3Drive({
       setTimeout(() => setCopied(false), 2500);
     }
   };
+
+  // 2. Share via SMS / Native Text Messaging
+  const handleShareSMS = () => {
+    const text = buildShareableText();
+    // iOS and Android support sms:?&body=
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const separator = isIOS ? '&' : '?';
+    window.location.href = `sms:${separator}body=${encodeURIComponent(text)}`;
+  };
+
+  // 3. Share via Email
+  const handleShareEmail = () => {
+    const text = buildShareableText();
+    const subject = `RTPlan Route #${manifestId} - ${routeDate || 'Today'}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+  };
+
+  // 4. Native OS Share Sheet (AirDrop, Messages, WhatsApp, Notes, etc.)
+  const handleNativeShare = async () => {
+    const text = buildShareableText();
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `RTPlan Route #${manifestId}`,
+          text: text,
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          handleCopyAllLinks();
+        }
+      }
+    } else {
+      handleCopyAllLinks();
+    }
+  };
+
+  const hasNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
   return (
     <div className="flex flex-col flex-1 pb-36">
@@ -158,26 +198,87 @@ export default function Step3Drive({
           )}
         </div>
 
-        {/* Share & Copy Action Bar */}
-        <div className="flex items-center justify-between gap-2">
+        {/* Share Route Action Card (Copy, SMS, Email, Native Share) */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
+              <Share2 className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Share Route & Links</span>
+            </span>
+            <span className="text-[10px] text-slate-500">
+              Instant dispatch options
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            {/* SMS Option */}
+            <button
+              type="button"
+              onClick={handleShareSMS}
+              className="py-2.5 px-2 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 hover:text-indigo-700 border border-slate-200 text-xs font-bold flex flex-col items-center justify-center space-y-1 transition-all active:scale-[0.98] shadow-2xs"
+              title="Open pre-filled SMS message"
+            >
+              <MessageSquare className="w-4 h-4 text-emerald-600" />
+              <span>Text / SMS</span>
+            </button>
+
+            {/* Email Option */}
+            <button
+              type="button"
+              onClick={handleShareEmail}
+              className="py-2.5 px-2 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 hover:text-indigo-700 border border-slate-200 text-xs font-bold flex flex-col items-center justify-center space-y-1 transition-all active:scale-[0.98] shadow-2xs"
+              title="Open pre-filled Email message"
+            >
+              <Mail className="w-4 h-4 text-indigo-600" />
+              <span>Email</span>
+            </button>
+
+            {/* Native Share or Copy */}
+            {hasNativeShare ? (
+              <button
+                type="button"
+                onClick={handleNativeShare}
+                className="py-2.5 px-2 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 hover:text-indigo-700 border border-slate-200 text-xs font-bold flex flex-col items-center justify-center space-y-1 transition-all active:scale-[0.98] shadow-2xs"
+                title="Open system share sheet"
+              >
+                <Share className="w-4 h-4 text-blue-600" />
+                <span>Share...</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleCopyAllLinks}
+                className={`py-2.5 px-2 rounded-xl border text-xs font-bold flex flex-col items-center justify-center space-y-1 transition-all active:scale-[0.98] shadow-2xs ${
+                  copied
+                    ? 'bg-emerald-600 text-white border-emerald-600'
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                }`}
+              >
+                {copied ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4 text-slate-600" />}
+                <span>{copied ? 'Copied!' : 'Copy'}</span>
+              </button>
+            )}
+          </div>
+
+          {/* Full Copy All Button */}
           <button
             type="button"
             onClick={handleCopyAllLinks}
-            className={`flex-1 min-h-[44px] rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition-all shadow-xs ${
+            className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-2xs ${
               copied
                 ? 'bg-emerald-600 text-white'
-                : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
             }`}
           >
             {copied ? (
               <>
-                <Check className="w-4 h-4 text-white" />
-                <span>Copied All Links to Clipboard!</span>
+                <Check className="w-3.5 h-3.5 text-white" />
+                <span>Copied All Map Links to Clipboard!</span>
               </>
             ) : (
               <>
-                <Copy className="w-4 h-4 text-indigo-600" />
-                <span>Copy All Maps Links</span>
+                <Copy className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Copy All Formatted Map Links</span>
               </>
             )}
           </button>

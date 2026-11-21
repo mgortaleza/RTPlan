@@ -60,11 +60,33 @@ export async function getManifest(id) {
 
 /**
  * Retrieves the most recent route manifests from the backend database.
+ * If username is provided, only retrieves manifests created by that user.
+ * @param {string} [username]
  * @returns {Promise<Array>} List of ManifestResponse objects
  */
-export async function getRecentManifests() {
-  const response = await apiClient.get('/api/routes/manifests');
+export async function getRecentManifests(username) {
+  const params = username ? { username } : {};
+  const response = await apiClient.get('/api/routes/manifests', { params });
   return response.data;
+}
+
+/**
+ * Clears recent route manifests for the user (or all if username not provided).
+ * @param {string} [username]
+ * @returns {Promise<void>}
+ */
+export async function clearRecentManifests(username) {
+  const params = username ? { username } : {};
+  await apiClient.delete('/api/routes/manifests', { params });
+}
+
+/**
+ * Deletes a single manifest by ID.
+ * @param {number|string} id
+ * @returns {Promise<void>}
+ */
+export async function deleteManifest(id) {
+  await apiClient.delete(`/api/routes/manifests/${id}`);
 }
 
 /**

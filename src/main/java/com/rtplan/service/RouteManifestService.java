@@ -75,6 +75,9 @@ public class RouteManifestService {
         RouteManifest manifest = RouteManifest.builder()
                 .driver(driver)
                 .routeDate(request.getRouteDate() != null ? request.getRouteDate() : LocalDate.now())
+                .createdBy(request.getCreatedBy() != null && !request.getCreatedBy().isBlank()
+                        ? request.getCreatedBy().trim()
+                        : driver.getFullName())
                 .status(ManifestStatus.OPTIMIZED)
                 .build();
 
@@ -130,17 +133,51 @@ public class RouteManifestService {
     }
 
     /**
-     * Retrieves the top 15 most recent route manifests along with their stops and links.
+     * Retrieves recent route manifests for a specific user (or global top 15 if username not specified).
      *
+     * @param username The username/creator filter
      * @return List of ManifestResponse objects ordered newest to oldest
      */
     @Transactional(readOnly = true)
-    public List<ManifestResponse> getRecentManifests() {
-        List<RouteManifest> manifests = routeManifestRepository.findTop15ByOrderByManifestIdDesc();
+    public List<ManifestResponse> getRecentManifests(String username) {
+        List<RouteManifest> manifests;
+        if (username != null && !username.isBlank()) {
+            manifests = routeManifestRepository.findRecentByUsername(username.trim());
+        } else {
+            manifests = routeManifestRepository.findTop15ByOrderByManifestIdDesc();
+        }
         manifests.forEach(m -> {
             m.getStops().size();
             m.getLinks().size();
         });
         return manifests.stream().map(ManifestResponse::fromEntity).toList();
+    }
+
+    /**
+     * Deletes route manifests for a specific user, or all manifests if username is empty.
+     *
+     * @param username The username whose history should be cleared
+     */
+    @Transactional
+    public void clearManifestHistory(String username) {
+        if (username != null && !username.isBlank()) {
+            List<RouteManifest> userManifests = routeManifestRepository.findRecentByUsername(username.trim());
+            log.info("Deleting {} manifest(s) for user '{}'", userManifests.size(), username);
+            routeManifestRepository.deleteAll(userManifests);
+        } else {
+            log.info("Deleting all manifests in the system");
+            routeManifestRepository.deleteAll();
+        }
+    }
+
+    /**
+     * Deletes a single route manifest by its ID.
+     *
+     * @param manifestId Manifest PK
+     */
+    @Transactional
+    public void deleteManifestById(Long manifestId) {
+        log.info("Deleting manifest ID: {}", manifestId);
+        routeManifestRepository.deleteById(manifestId);
     }
 }

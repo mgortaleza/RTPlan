@@ -255,6 +255,7 @@ export default function App() {
     try {
       const response = await optimizeRoute({
         driverId: selectedDriverId,
+        createdBy: currentUser?.username || currentUser?.fullName,
         routeDate,
         stops: combinedStops,
       });
@@ -382,6 +383,7 @@ export default function App() {
           isOpen={isRecentModalOpen}
           onClose={() => setIsRecentModalOpen(false)}
           onSelectManifest={handleSelectRecentManifest}
+          currentUser={currentUser}
         />
       </main>
     </div>

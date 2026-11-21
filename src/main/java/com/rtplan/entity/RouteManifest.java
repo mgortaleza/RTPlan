@@ -30,6 +30,9 @@ public class RouteManifest {
     @Column(name = "RouteDate", nullable = false)
     private LocalDate routeDate;
 
+    @Column(name = "CreatedBy", length = 50)
+    private String createdBy;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false, length = 30)
     @Builder.Default

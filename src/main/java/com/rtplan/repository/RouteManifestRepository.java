@@ -20,4 +20,11 @@ public interface RouteManifestRepository extends JpaRepository<RouteManifest, Lo
     Optional<RouteManifest> findByIdWithDriverAndStops(@Param("id") Long id);
 
     List<RouteManifest> findTop15ByOrderByManifestIdDesc();
+
+    @Query("SELECT DISTINCT m FROM RouteManifest m " +
+           "JOIN FETCH m.driver d " +
+           "LEFT JOIN FETCH m.stops s " +
+           "WHERE (LOWER(m.createdBy) = LOWER(:username) OR LOWER(d.fullName) = LOWER(:username)) " +
+           "ORDER BY m.manifestId DESC")
+    List<RouteManifest> findRecentByUsername(@Param("username") String username);
 }

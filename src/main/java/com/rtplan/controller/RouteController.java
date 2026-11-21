@@ -63,14 +63,44 @@ public class RouteController {
 
     /**
      * Retrieves recent saved route manifests with their ordered stops and chunked navigation links.
+     * Optionally filtered by username (user that created the route).
      *
+     * @param username Optional username filter
      * @return List of recent ManifestResponses
      */
     @GetMapping(value = "/manifests", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ManifestResponse>> getRecentManifests() {
-        log.info("Fetching recent route manifests");
-        List<ManifestResponse> manifests = routeManifestService.getRecentManifests();
+    public ResponseEntity<List<ManifestResponse>> getRecentManifests(
+            @RequestParam(value = "username", required = false) String username) {
+        log.info("Fetching recent route manifests for username: {}", username);
+        List<ManifestResponse> manifests = routeManifestService.getRecentManifests(username);
         return ResponseEntity.ok(manifests);
+    }
+
+    /**
+     * Clears recent route manifests. If username is supplied, only clears for that user.
+     *
+     * @param username Optional username filter
+     * @return Success message
+     */
+    @DeleteMapping(value = "/manifests", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> clearRecentManifests(
+            @RequestParam(value = "username", required = false) String username) {
+        log.info("Clearing recent route manifests for username: {}", username);
+        routeManifestService.clearManifestHistory(username);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Deletes a single route manifest by ID.
+     *
+     * @param id Manifest ID
+     * @return Success response
+     */
+    @DeleteMapping(value = "/manifests/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> deleteManifest(@PathVariable("id") Long id) {
+        log.info("Deleting route manifest ID: {}", id);
+        routeManifestService.deleteManifestById(id);
+        return ResponseEntity.noContent().build();
     }
 
     /**
