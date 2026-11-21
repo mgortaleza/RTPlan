@@ -60,12 +60,15 @@ export async function getManifest(id) {
 
 /**
  * Retrieves the most recent route manifests from the backend database.
- * If username is provided, only retrieves manifests created by that user.
+ * If username or fullName is provided, retrieves manifests matching either.
  * @param {string} [username]
+ * @param {string} [fullName]
  * @returns {Promise<Array>} List of ManifestResponse objects
  */
-export async function getRecentManifests(username) {
-  const params = username ? { username } : {};
+export async function getRecentManifests(username, fullName) {
+  const params = {};
+  if (username) params.username = username;
+  if (fullName) params.fullName = fullName;
   const response = await apiClient.get('/api/routes/manifests', { params });
   return response.data;
 }

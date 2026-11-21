@@ -17,27 +17,31 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "UserID")
+    @Column(name = "userid")
     private Long userId;
 
-    @Column(name = "Username", nullable = false, unique = true, length = 50)
+    @Column(name = "username", nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(name = "Password", nullable = false, length = 150)
+    @Column(name = "password", nullable = false, length = 150)
     private String password;
 
-    @Column(name = "FullName", nullable = false, length = 150)
+    @Column(name = "full_name", nullable = false, length = 150)
     private String fullName;
 
-    @Column(name = "Role", nullable = false, length = 30)
+    @Column(name = "role", nullable = false, length = 30)
     @Builder.Default
-    private String role = "DISPATCHER";
+    private String role = "DRIVER"; // ADMIN, DISPATCH, DRIVER
 
-    @Column(name = "IsActive", nullable = false)
+    @Column(name = "status", nullable = false, length = 30)
+    @Builder.Default
+    private String status = "APPROVED"; // PENDING, APPROVED, REJECTED
+
+    @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean isActive = true;
 
     @CreationTimestamp
-    @Column(name = "CreatedAt", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

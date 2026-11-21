@@ -7,6 +7,7 @@ import Step2Verify, { DEFAULT_PRESETS } from './components/Step2Verify';
 import Step3Drive from './components/Step3Drive';
 import LoginPage from './components/LoginPage';
 import RecentRoutesModal from './components/RecentRoutesModal';
+import AdminPage from './components/AdminPage';
 import {
   extractAddresses,
   optimizeRoute,
@@ -62,6 +63,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [isRecentModalOpen, setIsRecentModalOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   // Sync state changes to localStorage
   useEffect(() => {
@@ -391,90 +393,101 @@ export default function App() {
           isOnline={isOnline}
           onRefreshHealth={checkHealth}
           onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
+          onOpenAdmin={() => setIsAdminOpen(true)}
           currentUser={currentUser}
           onLogout={handleLogout}
         />
 
-        <StepIndicator
-          currentStep={currentStep}
-          maxAllowedStep={maxAllowedStep}
-          canGoToVerify={canGoToVerify}
-          canGoToDrive={canGoToDrive}
-          onStepClick={(stepKey) => {
-            setErrorMessage(null);
-            setInfoMessage(null);
-            setCurrentStep(stepKey);
-          }}
-        />
-
-        <ErrorBanner
-          message={errorMessage}
-          onDismiss={() => setErrorMessage(null)}
-        />
-
-        {currentStep === 'upload' && (
-          <Step1Upload
-            files={files}
-            setFiles={setFiles}
-            stops={stops}
-            manifest={manifest}
-            onExtract={handleExtract}
-            onGoToVerify={() => {
-              setErrorMessage(null);
-              setCurrentStep('verify');
-            }}
-            onGoToDrive={() => {
-              setErrorMessage(null);
-              setCurrentStep('drive');
-            }}
-            onClearStops={handleClearStops}
-            onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
-            onStartManualEntry={handleStartManualEntry}
-            isLoading={isLoading}
+        {isAdminOpen ? (
+          <AdminPage
+            currentUser={currentUser}
+            onClose={() => setIsAdminOpen(false)}
           />
-        )}
+        ) : (
+          <>
+            <StepIndicator
+              currentStep={currentStep}
+              maxAllowedStep={maxAllowedStep}
+              canGoToVerify={canGoToVerify}
+              canGoToDrive={canGoToDrive}
+              onStepClick={(stepKey) => {
+                setErrorMessage(null);
+                setInfoMessage(null);
+                setCurrentStep(stepKey);
+              }}
+            />
 
-        {currentStep === 'verify' && (
-          <Step2Verify
-            originAddress={originAddress}
-            setOriginAddress={setOriginAddress}
-            stops={stops}
-            setStops={setStops}
-            drivers={drivers}
-            selectedDriverId={selectedDriverId}
-            setSelectedDriverId={setSelectedDriverId}
-            routeDate={routeDate}
-            setRouteDate={setRouteDate}
-            manifest={manifest}
-            onOptimize={handleOptimize}
-            onBackToUpload={() => {
-              setErrorMessage(null);
-              setCurrentStep('upload');
-            }}
-            onGoToDrive={() => {
-              setErrorMessage(null);
-              setCurrentStep('drive');
-            }}
-            isLoading={isLoading}
-            presets={presets}
-            setPresets={setPresets}
-          />
-        )}
+            <ErrorBanner
+              message={errorMessage}
+              onDismiss={() => setErrorMessage(null)}
+            />
 
-        {currentStep === 'drive' && (
-          <Step3Drive
-            manifest={manifest}
-            onResetWorkflow={handleResetWorkflow}
-            onBackToEdit={() => {
-              setErrorMessage(null);
-              setCurrentStep('verify');
-            }}
-            onBackToUpload={() => {
-              setErrorMessage(null);
-              setCurrentStep('upload');
-            }}
-            onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
-          />
+            {currentStep === 'upload' && (
+              <Step1Upload
+                files={files}
+                setFiles={setFiles}
+                stops={stops}
+                manifest={manifest}
+                onExtract={handleExtract}
+                onGoToVerify={() => {
+                  setErrorMessage(null);
+                  setCurrentStep('verify');
+                }}
+                onGoToDrive={() => {
+                  setErrorMessage(null);
+                  setCurrentStep('drive');
+                }}
+                onClearStops={handleClearStops}
+                onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
+                onStartManualEntry={handleStartManualEntry}
+                isLoading={isLoading}
+              />
+            )}
+
+            {currentStep === 'verify' && (
+              <Step2Verify
+                originAddress={originAddress}
+                setOriginAddress={setOriginAddress}
+                stops={stops}
+                setStops={setStops}
+                drivers={drivers}
+                selectedDriverId={selectedDriverId}
+                setSelectedDriverId={setSelectedDriverId}
+                routeDate={routeDate}
+                setRouteDate={setRouteDate}
+                manifest={manifest}
+                onOptimize={handleOptimize}
+                onBackToUpload={() => {
+                  setErrorMessage(null);
+                  setCurrentStep('upload');
+                }}
+                onGoToDrive={() => {
+                  setErrorMessage(null);
+                  setCurrentStep('drive');
+                }}
+                isLoading={isLoading}
+                presets={presets}
+                setPresets={setPresets}
+                currentUser={currentUser}
+              />
+            )}
+
+            {currentStep === 'drive' && (
+              <Step3Drive
+                manifest={manifest}
+                onResetWorkflow={handleResetWorkflow}
+                onBackToEdit={() => {
+                  setErrorMessage(null);
+                  setCurrentStep('verify');
+                }}
+                onBackToUpload={() => {
+                  setErrorMessage(null);
+                  setCurrentStep('upload');
+                }}
+                onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
+              />
+            )}
+          </>
         )}
 
         {/* Modal for Recalling Recent Routes */}

@@ -81,9 +81,10 @@ public class RouteController {
      */
     @GetMapping(value = "/manifests", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<ManifestResponse>> getRecentManifests(
-            @RequestParam(value = "username", required = false) String username) {
-        log.info("Fetching recent route manifests for username: {}", username);
-        List<ManifestResponse> manifests = routeManifestService.getRecentManifests(username);
+            @RequestParam(value = "username", required = false) String username,
+            @RequestParam(value = "fullName", required = false) String fullName) {
+        log.info("Fetching recent route manifests for username: '{}', fullName: '{}'", username, fullName);
+        List<ManifestResponse> manifests = routeManifestService.getRecentManifests(username, fullName);
         return ResponseEntity.ok(manifests);
     }
 

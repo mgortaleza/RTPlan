@@ -53,8 +53,25 @@ export default function Step2Verify({
   isLoading,
   presets: propPresets,
   setPresets: propSetPresets,
+  currentUser,
 }) {
   const [originNotice, setOriginNotice] = useState(null);
+
+  const isDriverRole = currentUser?.role?.toUpperCase() === 'DRIVER';
+
+  // If user is a Driver, automatically lock to their own driver account
+  useEffect(() => {
+    if (isDriverRole && drivers && drivers.length > 0) {
+      const match = drivers.find(
+        (d) =>
+          d.fullName.toLowerCase() === (currentUser?.fullName || '').toLowerCase() ||
+          d.fullName.toLowerCase() === (currentUser?.username || '').toLowerCase()
+      );
+      if (match && selectedDriverId !== match.driverId) {
+        setSelectedDriverId(match.driverId);
+      }
+    }
+  }, [isDriverRole, currentUser, drivers, selectedDriverId, setSelectedDriverId]);
 
   // Saved origin presets (persisted in localStorage)
   const [internalPresets, setInternalPresets] = useState(() => {
@@ -246,21 +263,40 @@ export default function Step2Verify({
         <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5 shadow-2xs">
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center space-x-1">
-                <User className="w-3 h-3 text-indigo-600" />
-                <span>Driver</span>
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                <span className="flex items-center space-x-1">
+                  <User className="w-3 h-3 text-indigo-600" />
+                  <span>Driver</span>
+                </span>
+                {isDriverRole && (
+                  <span className="text-[10px] text-slate-400 font-semibold lowercase">locked to self</span>
+                )}
               </label>
-              <select
-                value={selectedDriverId}
-                onChange={(e) => setSelectedDriverId(Number(e.target.value))}
-                className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 shadow-2xs"
-              >
-                {drivers.map((d) => (
-                  <option key={d.driverId} value={d.driverId}>
-                    {d.fullName}
-                  </option>
-                ))}
-              </select>
+              {isDriverRole ? (
+                <div className="w-full bg-slate-100/90 border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-800 font-semibold flex items-center justify-between shadow-2xs">
+                  <span className="truncate">
+                    {drivers.find((d) => d.driverId === selectedDriverId)?.fullName ||
+                     currentUser?.fullName ||
+                     currentUser?.username ||
+                     'Self (Driver)'}
+                  </span>
+                  <span className="text-[9px] bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded ml-1 shrink-0 uppercase tracking-wider">
+                    Self
+                  </span>
+                </div>
+              ) : (
+                <select
+                  value={selectedDriverId}
+                  onChange={(e) => setSelectedDriverId(Number(e.target.value))}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 shadow-2xs font-medium"
+                >
+                  {drivers.map((d) => (
+                    <option key={d.driverId} value={d.driverId}>
+                      {d.fullName}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>

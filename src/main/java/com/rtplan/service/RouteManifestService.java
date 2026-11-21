@@ -140,9 +140,26 @@ public class RouteManifestService {
      */
     @Transactional(readOnly = true)
     public List<ManifestResponse> getRecentManifests(String username) {
+        return getRecentManifests(username, null);
+    }
+
+    /**
+     * Retrieves recent route manifests matching either the creator username or assigned driver name.
+     *
+     * @param username The username/creator filter
+     * @param fullName The driver full name filter
+     * @return List of ManifestResponse objects ordered newest to oldest
+     */
+    @Transactional(readOnly = true)
+    public List<ManifestResponse> getRecentManifests(String username, String fullName) {
         List<RouteManifest> manifests;
-        if (username != null && !username.isBlank()) {
-            manifests = routeManifestRepository.findRecentByUsername(username.trim());
+        boolean hasUser = username != null && !username.isBlank();
+        boolean hasName = fullName != null && !fullName.isBlank();
+
+        if (hasUser || hasName) {
+            String primary = hasUser ? username.trim() : fullName.trim();
+            String secondary = (hasName && !fullName.trim().equalsIgnoreCase(primary)) ? fullName.trim() : null;
+            manifests = routeManifestRepository.findRecentByUserOrDriver(primary, secondary);
         } else {
             manifests = routeManifestRepository.findTop15ByOrderByManifestIdDesc();
         }

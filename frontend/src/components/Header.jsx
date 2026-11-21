@@ -7,6 +7,7 @@ import {
   LogOut,
   User as UserIcon,
   AlertCircle,
+  Shield,
 } from 'lucide-react';
 
 export default function Header({
@@ -15,8 +16,11 @@ export default function Header({
   onOpenRecentRoutes,
   currentUser,
   onLogout,
+  onOpenAdmin,
 }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const isAdmin = currentUser?.role?.toUpperCase() === 'ADMIN';
 
   return (
     <>
@@ -39,6 +43,18 @@ export default function Header({
 
           {/* Right Actions */}
           <div className="flex items-center space-x-1.5 sm:space-x-2">
+            {isAdmin && onOpenAdmin && (
+              <button
+                type="button"
+                onClick={onOpenAdmin}
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-full text-xs font-bold bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition-colors shadow-2xs"
+                title="Open Admin Console"
+              >
+                <Shield className="w-3.5 h-3.5 text-purple-600" />
+                <span className="hidden min-[380px]:inline">Admin</span>
+              </button>
+            )}
+
             {onOpenRecentRoutes && (
               <button
                 type="button"

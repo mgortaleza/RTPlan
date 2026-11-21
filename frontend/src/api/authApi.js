@@ -23,6 +23,27 @@ export async function login(username, password) {
 }
 
 /**
+ * Registers a new user account.
+ * Newly created accounts default to PENDING status requiring admin approval.
+ * @param {Object} data
+ * @param {string} data.username
+ * @param {string} data.password
+ * @param {string} [data.fullName]
+ * @param {string} [data.role]
+ * @returns {Promise<Object>} AuthResponse
+ */
+export async function register(data) {
+  const response = await apiClient.post('/api/auth/register', {
+    username: data.username.trim(),
+    password: data.password,
+    fullName: (data.fullName || data.username).trim(),
+    role: data.role || 'DRIVER',
+  });
+
+  return response.data;
+}
+
+/**
  * Clears authenticated user session.
  */
 export function logout() {

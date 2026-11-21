@@ -27,20 +27,21 @@ export default function RecentRoutesModal({
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [error, setError] = useState(null);
 
-  const username = currentUser?.username || currentUser?.fullName;
+  const username = currentUser?.username;
+  const fullName = currentUser?.fullName;
 
   useEffect(() => {
     if (isOpen) {
       loadRoutes();
     }
-  }, [isOpen, username]);
+  }, [isOpen, username, fullName]);
 
   const loadRoutes = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // User-scoped: only retrieve manifests created by or assigned to this user
-      const data = await getRecentManifests(username);
+      // User-scoped: retrieve manifests created by this user OR assigned to this user/driver
+      const data = await getRecentManifests(username, fullName);
       setManifests(data || []);
     } catch (err) {
       console.error('Failed to load recent manifests:', err);
