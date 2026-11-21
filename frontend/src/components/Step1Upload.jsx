@@ -66,7 +66,10 @@ export default function Step1Upload({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const hasExistingStops = stops && stops.length > 0;
+  const validStops = (stops || []).filter(
+    (s) => s && s.correctedAddress && s.correctedAddress.trim().length > 0
+  );
+  const hasExistingStops = validStops.length > 0;
 
   return (
     <div className="flex flex-col flex-1 pb-28">
@@ -81,7 +84,7 @@ export default function Step1Upload({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">
-                    {stops.length} Stop{stops.length > 1 ? 's' : ''} Already Loaded
+                    {validStops.length} Stop{validStops.length > 1 ? 's' : ''} Already Loaded
                   </h3>
                   <p className="text-[11px] text-emerald-800">
                     Your addresses are saved. No need to rescan!
@@ -108,7 +111,7 @@ export default function Step1Upload({
                 className="flex-1 min-h-[42px] px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-bold flex items-center justify-center space-x-2 shadow-sm transition-all"
               >
                 <ListOrdered className="w-3.5 h-3.5" />
-                <span>Continue to Verify & Edit ({stops.length})</span>
+                <span>Continue to Verify & Edit ({validStops.length})</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
 

@@ -44,10 +44,16 @@ export async function register(data) {
 }
 
 /**
- * Clears authenticated user session.
+ * Clears authenticated user session and wipes all stored app cache.
  */
 export function logout() {
   removeFromStorage(AUTH_USER_KEY);
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
+  }
 }
 
 /**

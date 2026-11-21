@@ -22,6 +22,7 @@ import {
   loadFromStorage,
   saveToStorage,
   clearRouteStorage,
+  clearAllUserStorage,
 } from './utils/storage';
 
 export default function App() {
@@ -75,11 +76,15 @@ export default function App() {
   }, [manifest]);
 
   useEffect(() => {
-    saveToStorage('stops', stops);
+    const valid = (stops || []).filter(
+      (s) => s && s.correctedAddress && s.correctedAddress.trim().length > 0
+    );
+    saveToStorage('stops', valid.length > 0 ? stops : []);
   }, [stops]);
 
   useEffect(() => {
-    saveToStorage('origin', originAddress);
+    const clean = (originAddress || '').trim();
+    saveToStorage('origin', clean);
   }, [originAddress]);
 
   useEffect(() => {
@@ -128,6 +133,19 @@ export default function App() {
 
   const handleLogout = () => {
     logout();
+    clearAllUserStorage();
+    setManifest(null);
+    setStops([]);
+    setFiles([]);
+    setOriginAddress('');
+    setPresets(DEFAULT_PRESETS);
+    setSelectedDriverId(1);
+    setRouteDate(new Date().toISOString().split('T')[0]);
+    setCurrentStep('upload');
+    setErrorMessage(null);
+    setInfoMessage(null);
+    setIsAdminOpen(false);
+    setIsRecentModalOpen(false);
     setCurrentUser(null);
   };
 
@@ -136,10 +154,21 @@ export default function App() {
     return <LoginPage onLoginSuccess={setCurrentUser} />;
   }
 
-  // Step navigation rules
-  const canGoToVerify = stops.length > 0 || manifest !== null;
-  const canGoToDrive = manifest !== null;
-  const maxAllowedStep = manifest ? 3 : stops.length > 0 ? 2 : 1;
+  // Prune blank/empty stop entries to prevent false positives when returning to Upload
+  const pruneEmptyStops = () => {
+    setStops((prev) =>
+      (prev || []).filter((s) => s && s.correctedAddress && s.correctedAddress.trim().length > 0)
+    );
+    setOriginAddress((prev) => (prev ? prev.trim() : ''));
+  };
+
+  // Step navigation rules (strictly based on non-empty stops or origin)
+  const validStopsCount = (stops || []).filter(
+    (s) => s && s.correctedAddress && s.correctedAddress.trim().length > 0
+  ).length;
+  const hasValidOrigin = Boolean(originAddress && originAddress.trim().length > 0);
+  const canGoToVerify = validStopsCount > 0 || manifest !== null || hasValidOrigin;
+  const maxAllowedStep = manifest ? 3 : (validStopsCount > 0 || hasValidOrigin) ? 2 : 1;
 
   // Step 1: Extract addresses using Gemini OCR (Appends to existing stops to avoid rescanning!)
   const handleExtract = async () => {
@@ -308,17 +337,24 @@ export default function App() {
 
   // Start manual entry directly without scanning photos
   const handleStartManualEntry = () => {
-    // Requirement: On manual entry, do not pre-populate from field!
+    // Reset origin address
     setOriginAddress('');
-    if (!stops || stops.length === 0) {
-      setStops([
-        {
-          originalExtractedText: '',
-          correctedAddress: '',
-          isManuallyEdited: true,
-        },
-      ]);
-    }
+    // Remove previous blank items and add a single empty row ready for typing
+    setStops((prev) => {
+      const valid = (prev || []).filter(
+        (s) => s && s.correctedAddress && s.correctedAddress.trim().length > 0
+      );
+      if (valid.length === 0) {
+        return [
+          {
+            originalExtractedText: '',
+            correctedAddress: '',
+            isManuallyEdited: true,
+          },
+        ];
+      }
+      return valid;
+    });
     setErrorMessage(null);
     setInfoMessage(null);
     setCurrentStep('verify');
@@ -413,6 +449,9 @@ export default function App() {
               onStepClick={(stepKey) => {
                 setErrorMessage(null);
                 setInfoMessage(null);
+                if (stepKey === 'upload') {
+                  pruneEmptyStops();
+                }
                 setCurrentStep(stepKey);
               }}
             />
@@ -459,6 +498,7 @@ export default function App() {
                 onOptimize={handleOptimize}
                 onBackToUpload={() => {
                   setErrorMessage(null);
+                  pruneEmptyStops();
                   setCurrentStep('upload');
                 }}
                 onGoToDrive={() => {
@@ -482,6 +522,7 @@ export default function App() {
                 }}
                 onBackToUpload={() => {
                   setErrorMessage(null);
+                  pruneEmptyStops();
                   setCurrentStep('upload');
                 }}
                 onOpenRecentRoutes={() => setIsRecentModalOpen(true)}

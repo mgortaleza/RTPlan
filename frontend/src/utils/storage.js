@@ -49,3 +49,17 @@ export function clearRouteStorage() {
     } catch {}
   });
 }
+
+/**
+ * Completely clears all application and user cache from localStorage and sessionStorage.
+ * Used during logout to prevent any user data crossover on shared devices.
+ */
+export function clearAllUserStorage() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
+  } catch (err) {
+    console.warn('Failed to clear user storage on logout:', err);
+  }
+}

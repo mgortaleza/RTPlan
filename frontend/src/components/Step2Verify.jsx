@@ -263,25 +263,17 @@ export default function Step2Verify({
         <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5 shadow-2xs">
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center justify-between">
-                <span className="flex items-center space-x-1">
-                  <User className="w-3 h-3 text-indigo-600" />
-                  <span>Driver</span>
-                </span>
-                {isDriverRole && (
-                  <span className="text-[10px] text-slate-400 font-semibold lowercase">locked to self</span>
-                )}
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center space-x-1">
+                <User className="w-3 h-3 text-indigo-600" />
+                <span>Driver</span>
               </label>
               {isDriverRole ? (
-                <div className="w-full bg-slate-100/90 border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-800 font-semibold flex items-center justify-between shadow-2xs">
-                  <span className="truncate">
+                <div className="w-full bg-slate-100/90 border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-800 font-semibold shadow-2xs">
+                  <span className="truncate block">
                     {drivers.find((d) => d.driverId === selectedDriverId)?.fullName ||
                      currentUser?.fullName ||
                      currentUser?.username ||
-                     'Self (Driver)'}
-                  </span>
-                  <span className="text-[9px] bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded ml-1 shrink-0 uppercase tracking-wider">
-                    Self
+                     'Driver'}
                   </span>
                 </div>
               ) : (
@@ -331,7 +323,7 @@ export default function Step2Verify({
               type="text"
               value={originAddress}
               onChange={(e) => setOriginAddress(e.target.value)}
-              placeholder="e.g. 200 Medical Plaza, Los Angeles, CA 90095"
+              placeholder="Enter starting address..."
               className="w-full bg-white border border-emerald-300 focus:border-emerald-600 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-2xs font-medium"
             />
           </div>
