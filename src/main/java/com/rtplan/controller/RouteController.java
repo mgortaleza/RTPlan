@@ -1,6 +1,7 @@
 package com.rtplan.controller;
 
 import com.rtplan.dto.request.OptimizeRouteRequest;
+import com.rtplan.dto.response.AddressExtractionResponse;
 import com.rtplan.dto.response.ManifestResponse;
 import com.rtplan.service.GeminiExtractionService;
 import com.rtplan.service.RouteManifestService;
@@ -32,7 +33,7 @@ public class RouteController {
      * @return List of extracted address strings
      */
     @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<String>> extractAddresses(
+    public ResponseEntity<AddressExtractionResponse> extractAddresses(
             @RequestParam(value = "files", required = false) MultipartFile[] files,
             @RequestParam(value = "screenshots", required = false) MultipartFile[] screenshots) {
 
@@ -42,8 +43,8 @@ public class RouteController {
         }
 
         log.info("Received request to extract addresses from {} image(s)", targetFiles.length);
-        List<String> addresses = geminiExtractionService.extractAddressesFromImages(targetFiles);
-        return ResponseEntity.ok(addresses);
+        AddressExtractionResponse response = geminiExtractionService.extractAddressesFromImages(targetFiles);
+        return ResponseEntity.ok(response);
     }
 
     /**

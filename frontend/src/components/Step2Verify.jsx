@@ -23,11 +23,16 @@ import {
 } from 'lucide-react';
 import { loadFromStorage, saveToStorage } from '../utils/storage';
 
-const DEFAULT_PRESETS = [
+export const DEFAULT_PRESETS = [
   {
-    id: 'ucla',
-    label: 'UCLA Plaza',
-    address: '200 Medical Plaza, Los Angeles, CA 90095',
+    id: 'ucla_mp1',
+    label: 'UCLA MP1 Pharmacy',
+    address: '200 Medical Plaza Suite 135, Los Angeles, CA 90095',
+  },
+  {
+    id: 'rr_pharmacy',
+    label: 'Ronald Reagan Pharmacy',
+    address: '757 Westwood Plaza, Los Angeles, CA 90095',
   },
 ];
 
@@ -46,13 +51,18 @@ export default function Step2Verify({
   onBackToUpload,
   onGoToDrive,
   isLoading,
+  presets: propPresets,
+  setPresets: propSetPresets,
 }) {
   const [originNotice, setOriginNotice] = useState(null);
 
   // Saved origin presets (persisted in localStorage)
-  const [presets, setPresets] = useState(() => {
+  const [internalPresets, setInternalPresets] = useState(() => {
     return loadFromStorage('origin_presets', DEFAULT_PRESETS);
   });
+
+  const presets = propPresets ?? internalPresets;
+  const setPresets = propSetPresets ?? setInternalPresets;
   const [selectedPresetId, setSelectedPresetId] = useState('');
   const [isSavingPreset, setIsSavingPreset] = useState(false);
   const [newPresetLabel, setNewPresetLabel] = useState('');
@@ -60,6 +70,18 @@ export default function Step2Verify({
   useEffect(() => {
     saveToStorage('origin_presets', presets);
   }, [presets]);
+
+  // Keep dropdown selection synchronized when originAddress changes
+  useEffect(() => {
+    if (originAddress && presets && presets.length > 0) {
+      const match = presets.find(
+        (p) => p.address?.trim().toLowerCase() === originAddress.trim().toLowerCase()
+      );
+      setSelectedPresetId(match ? match.id : '');
+    } else {
+      setSelectedPresetId('');
+    }
+  }, [originAddress, presets]);
 
   const handleAddressChange = (index, value) => {
     setStops((prev) =>

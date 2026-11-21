@@ -115,7 +115,7 @@ http {
     }
 }
 "@
-Set-Content -Path "$remoteNginx\conf\nginx.conf" -Value $nginxConfContent -Encoding UTF8
+[System.IO.File]::WriteAllText("$remoteNginx\conf\nginx.conf", $nginxConfContent, [System.Text.Encoding]::ASCII)
 
 # 9. Configure WinSW Service for RTPlanner Backend
 Write-Host "=== Setting up RTPlanner Windows Service on APP1 ===" -ForegroundColor Cyan
@@ -182,9 +182,8 @@ try {
 }
 
 try {
-    $resApi = Invoke-RestMethod -Uri "http://$app1Ip/api/routes" -TimeoutSec 10
+    $resApi = Invoke-RestMethod -Uri "http://$app1Ip/api/routes/manifests" -TimeoutSec 10
     Write-Host "Nginx -> Backend API: OK" -ForegroundColor Green
-    $resApi | Format-List
 } catch {
     Write-Host "Backend API check: $_" -ForegroundColor Yellow
 }

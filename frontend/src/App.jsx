@@ -3,7 +3,7 @@ import Header from './components/Header';
 import StepIndicator from './components/StepIndicator';
 import ErrorBanner from './components/ErrorBanner';
 import Step1Upload from './components/Step1Upload';
-import Step2Verify from './components/Step2Verify';
+import Step2Verify, { DEFAULT_PRESETS } from './components/Step2Verify';
 import Step3Drive from './components/Step3Drive';
 import LoginPage from './components/LoginPage';
 import RecentRoutesModal from './components/RecentRoutesModal';
@@ -31,7 +31,10 @@ export default function App() {
   const [manifest, setManifest] = useState(() => loadFromStorage('manifest', null));
   const [stops, setStops] = useState(() => loadFromStorage('stops', []));
   const [originAddress, setOriginAddress] = useState(() =>
-    loadFromStorage('origin', '200 Medical Plaza, Los Angeles, CA 90095')
+    loadFromStorage('origin', '')
+  );
+  const [presets, setPresets] = useState(() =>
+    loadFromStorage('origin_presets', DEFAULT_PRESETS)
   );
   const [selectedDriverId, setSelectedDriverId] = useState(() =>
     loadFromStorage('driver_id', 1)
@@ -84,6 +87,10 @@ export default function App() {
   useEffect(() => {
     saveToStorage('route_date', routeDate);
   }, [routeDate]);
+
+  useEffect(() => {
+    saveToStorage('origin_presets', presets);
+  }, [presets]);
 
   // Check backend health on mount
   const checkHealth = useCallback(async () => {
@@ -140,8 +147,20 @@ export default function App() {
     setInfoMessage(null);
 
     try {
-      const extracted = await extractAddresses(files);
-      if (!extracted || extracted.length === 0) {
+      const extractionResult = await extractAddresses(files);
+
+      // Support new AddressExtractionResponse or legacy array
+      const deliveryAddrs = Array.isArray(extractionResult)
+        ? extractionResult
+        : (extractionResult?.deliveryAddresses || extractionResult?.addresses || []);
+      const primaryFrom = !Array.isArray(extractionResult)
+        ? (extractionResult?.primaryFromAddress || null)
+        : null;
+      const detectedFroms = !Array.isArray(extractionResult)
+        ? (extractionResult?.fromAddresses || [])
+        : [];
+
+      if ((!deliveryAddrs || deliveryAddrs.length === 0) && !primaryFrom) {
         setErrorMessage(
           'No addresses could be detected in the uploaded images. You can manually enter stops or try different photos.'
         );
@@ -149,14 +168,14 @@ export default function App() {
         return;
       }
 
-      // Convert extracted address strings into stop objects
-      const newExtractedStops = extracted.map((addr) => ({
+      // Convert extracted delivery address strings into stop objects
+      const newExtractedStops = (deliveryAddrs || []).map((addr) => ({
         originalExtractedText: addr,
         correctedAddress: addr,
         isManuallyEdited: false,
       }));
 
-      // Append new stops, filtering out duplicate addresses
+      // Append new delivery stops, filtering out duplicate addresses
       setStops((prevStops) => {
         if (!prevStops || prevStops.length === 0) {
           return newExtractedStops;
@@ -172,6 +191,47 @@ export default function App() {
 
         return [...prevStops, ...uniqueNew];
       });
+
+      // 1. If From location is available, populate on the from field
+      if (primaryFrom && primaryFrom.trim()) {
+        setOriginAddress(primaryFrom.trim());
+      }
+
+      // 2. Add all detected From locations as presets
+      if (detectedFroms && detectedFroms.length > 0) {
+        setPresets((prevPresets) => {
+          const current = prevPresets || [];
+          const existingAddresses = new Set(
+            current.map((p) => (p.address || '').trim().toLowerCase())
+          );
+
+          const toAdd = [];
+          detectedFroms.forEach((item) => {
+            const addr = (typeof item === 'string' ? item : item.address || '').trim();
+            const label = (typeof item === 'object' && item.label ? item.label : addr.split(',')[0]).trim();
+            if (addr && !existingAddresses.has(addr.toLowerCase())) {
+              existingAddresses.add(addr.toLowerCase());
+              toAdd.push({
+                id: `preset_scan_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+                label: label || 'Origin Facility',
+                address: addr,
+              });
+            }
+          });
+
+          return toAdd.length > 0 ? [...toAdd, ...current] : current;
+        });
+      }
+
+      if (primaryFrom && detectedFroms.length > 1) {
+        setInfoMessage(
+          `Detected ${detectedFroms.length} origin facilities. Selected "${primaryFrom.split(',')[0]}" as Starting Origin, and added all ${detectedFroms.length} to Presets.`
+        );
+      } else if (primaryFrom) {
+        setInfoMessage(
+          `Detected Starting Origin: "${primaryFrom.split(',')[0]}" (added to Origin Presets).`
+        );
+      }
 
       // Clear the selected file inputs now that extraction succeeded
       setFiles([]);
@@ -228,6 +288,8 @@ export default function App() {
 
   // Start manual entry directly without scanning photos
   const handleStartManualEntry = () => {
+    // Requirement: On manual entry, do not pre-populate from field!
+    setOriginAddress('');
     if (!stops || stops.length === 0) {
       setStops([
         {
@@ -376,6 +438,8 @@ export default function App() {
               setCurrentStep('drive');
             }}
             isLoading={isLoading}
+            presets={presets}
+            setPresets={setPresets}
           />
         )}
 
