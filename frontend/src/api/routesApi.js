@@ -78,9 +78,14 @@ export async function getActiveDrivers() {
  */
 export async function checkBackendHealth() {
   try {
-    await apiClient.get('/');
+    await apiClient.get('/api');
     return true;
   } catch {
-    return false;
+    try {
+      await apiClient.get('/');
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
