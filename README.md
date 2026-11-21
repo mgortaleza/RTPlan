@@ -3,8 +3,8 @@
 Spring Boot 4.x REST API middleman for multi-stop logistics routing. Designed to serve both a **React Web Frontend (Phase 1)** and a **Native Kotlin Android App (Phase 2)**.
 
 ## Core Features
-1. **Gemini 1.5 Flash OCR Address Extraction**:
-   Accepts multipart delivery manifest screenshots and prompts Gemini 1.5 Flash using `responseMimeType: "application/json"` to extract an array of addresses for user verification.
+1. **Gemini 3.8 Flash OCR Address Extraction**:
+   Accepts multipart delivery manifest screenshots and prompts Gemini 3.8 Flash using `responseMimeType: "application/json"` to extract an array of addresses for user verification.
 2. **Google Maps Geocoding**:
    Converts raw and user-verified addresses to high-precision `DECIMAL(9,6)` Latitude/Longitude coordinates.
 3. **Google Routes API TSP Optimization**:

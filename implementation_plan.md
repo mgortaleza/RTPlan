@@ -1,7 +1,7 @@
 # Implementation Plan - RTPlan Multi-Stop Logistics & Routing API
 
 ## Overview
-RTPlan is an "API-first" middleman backend designed to service both a **React web application (Phase 1)** and a **native Kotlin Android application (Phase 2)**. It orchestrates OCR/AI address extraction from physical manifest screenshots using Google Gemini 1.5 Flash, geocoding and TSP optimization using Google Maps APIs, and persistent storage in Microsoft SQL Server, along with Google Maps deep link chunking.
+RTPlan is an "API-first" middleman backend designed to service both a **React web application (Phase 1)** and a **native Kotlin Android application (Phase 2)**. It orchestrates OCR/AI address extraction from physical manifest screenshots using Google Gemini 3.8 Flash, geocoding and TSP optimization using Google Maps APIs, and persistent storage in Microsoft SQL Server, along with Google Maps deep link chunking.
 
 ---
 
