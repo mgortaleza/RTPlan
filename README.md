@@ -133,3 +133,23 @@ Configure the following environment variables or update `src/main/resources/appl
 - **`GET /api/drivers`**: List active drivers.
 - **`POST /api/drivers`**: Register a new driver (`{ "fullName": "Jane Doe", "phoneNumber": "555-0199" }`).
 - **`GET /api/drivers/{id}`**: Get driver details.
+
+---
+
+## React Frontend (Phase 1 Web App)
+
+A mobile-first responsive web application built with **React 19**, **Vite**, **Tailwind CSS v4**, and **Lucide React**.
+
+### Getting Started with Frontend
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+The application runs at `http://localhost:5173` and communicates with the Spring Boot backend at `http://localhost:8080` (configured via `VITE_API_BASE_URL`).
+
+### 3-Step Dispatch Workflow
+1. **Upload Screenshots**: Drag-and-drop or tap to upload manifest screenshots from photo library or mobile camera.
+2. **Verify & Edit**: Inspect and correct extracted stops with origin warehouse pin and manual address editing.
+3. **Driver Navigation Handoff**: View chunked 9-stop navigation leg cards, launch one-tap Google Maps directions, and copy clean dispatch message for drivers.

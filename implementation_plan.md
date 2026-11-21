@@ -201,6 +201,55 @@ erDiagram
 
 ---
 
+## Phase 1 Frontend: React (Vite) + Tailwind CSS
+
+### Architecture & Tech Stack
+- **Framework**: React 19 + Vite 8
+- **Styling**: Tailwind CSS v4 (`@tailwindcss/vite`), mobile-first responsive viewport (`max-w-md mx-auto min-h-screen bg-slate-900 text-slate-100`)
+- **Icons**: Lucide React
+- **API Client**: Axios HTTP client configured with base URL from `VITE_API_BASE_URL` (defaults to `http://localhost:8080`)
+- **Touch Optimization**: Minimum 44px tap targets, sticky bottom primary CTA bar, one-handed mobile ergonomic placement
+
+### Component Hierarchy
+```
+frontend/src/
+├── api/
+│   ├── client.js          # Axios instance configured with VITE_API_BASE_URL & timeout
+│   └── routesApi.js       # extractAddresses, optimizeRoute, getManifest, getDrivers, checkHealth
+├── components/
+│   ├── Header.jsx         # App branding, API connection health badge
+│   ├── StepIndicator.jsx  # 3-step pill progress bar (1. Upload -> 2. Verify -> 3. Drive)
+│   ├── ErrorBanner.jsx    # Dismissible error/alert toast banner
+│   ├── Step1Upload.jsx    # Large tap/drag upload area, thumbnail grid with removal, sticky extract CTA
+│   ├── Step2Verify.jsx    # Dedicated starting origin card, editable stops list, delete/add, sticky optimize CTA
+│   └── Step3Drive.jsx     # Route summary header, Leg cards with Maps buttons, Copy All Links, ordered stops
+├── App.jsx                # Multi-step state machine, error handling, persistent state
+├── main.jsx               # React DOM entrypoint
+└── index.css              # Tailwind imports and base styles
+```
+
+### 3-Step User Workflow
+1. **Step 1: Upload Screenshots**:
+   - Tap-to-upload area supporting mobile camera or photo gallery selection (`accept="image/*" multiple`).
+   - Drag-and-drop support with visual drop-zone feedback.
+   - Selected thumbnail preview cards with delete ("X") buttons.
+   - Built-in sample test images button for immediate browser testing without manual uploads.
+   - Sticky bottom "Extract Addresses" CTA with loading spinner.
+2. **Step 2: Verify & Edit Addresses**:
+   - Dedicated Starting Origin address input at top with presets (e.g. UCLA Pharmacy / Depot).
+   - Editable stop cards with stop numbers, manual edit indicator, and delete buttons.
+   - "+ Add Stop" button to append custom destinations.
+   - Sticky bottom "Optimize Route" CTA with loading state.
+3. **Step 3: Driver Navigation Handoff**:
+   - Summary statistics card (stops count, driver, route date).
+   - Leg Cards (e.g. "Leg 1: Stops 1–9", "Leg 2: Stops 10–17") showing start and end stops.
+   - Full-width "Start in Google Maps" button per leg (opens native Google Maps app/tab).
+   - "Copy All Links" action copying clean, formatted dispatch text to clipboard with toast confirmation.
+   - Collapsible ordered stop breakdown with coordinates badges.
+   - "New Route" reset button.
+
+---
+
 ## Directory Structure
 ```
 RTPlan/

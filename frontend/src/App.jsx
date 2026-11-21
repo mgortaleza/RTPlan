@@ -1,0 +1,219 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import Header from './components/Header';
+import StepIndicator from './components/StepIndicator';
+import ErrorBanner from './components/ErrorBanner';
+import Step1Upload from './components/Step1Upload';
+import Step2Verify from './components/Step2Verify';
+import Step3Drive from './components/Step3Drive';
+import {
+  extractAddresses,
+  optimizeRoute,
+  getActiveDrivers,
+  checkBackendHealth,
+} from './api/routesApi';
+
+export default function App() {
+  const [currentStep, setCurrentStep] = useState('upload'); // 'upload' | 'verify' | 'drive'
+  const [files, setFiles] = useState([]);
+  const [originAddress, setOriginAddress] = useState('200 Medical Plaza, Los Angeles, CA 90095');
+  const [stops, setStops] = useState([]);
+  const [drivers, setDrivers] = useState([{ driverId: 1, fullName: 'Primary Driver', isActive: true }]);
+  const [selectedDriverId, setSelectedDriverId] = useState(1);
+  const [routeDate, setRouteDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [manifest, setManifest] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+
+  // Check backend health on mount
+  const checkHealth = useCallback(async () => {
+    const alive = await checkBackendHealth();
+    setIsOnline(alive);
+    if (!alive) {
+      setErrorMessage((prev) =>
+        prev || 'Cannot connect to Spring Boot backend at http://localhost:8080. Please ensure the backend server is running.'
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    checkHealth();
+    // Fetch drivers from DB
+    getActiveDrivers().then((driverList) => {
+      if (driverList && driverList.length > 0) {
+        setDrivers(driverList);
+        setSelectedDriverId(driverList[0].driverId);
+      }
+    });
+  }, [checkHealth]);
+
+  // Max step user can navigate backwards or forwards to
+  const maxAllowedStep = manifest ? 3 : stops.length > 0 ? 2 : 1;
+
+  // Step 1: Extract addresses using Gemini OCR
+  const handleExtract = async () => {
+    if (files.length === 0) return;
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const extracted = await extractAddresses(files);
+      if (!extracted || extracted.length === 0) {
+        setErrorMessage('No addresses could be detected in the uploaded images. You can manually enter stops or try different photos.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Convert extracted address strings into stop objects
+      const newStops = extracted.map((addr) => ({
+        originalExtractedText: addr,
+        correctedAddress: addr,
+        isManuallyEdited: false,
+      }));
+
+      setStops(newStops);
+      setCurrentStep('verify');
+    } catch (err) {
+      console.error('Extract error:', err);
+      let msg = err.message || 'Failed to extract addresses.';
+      if (msg.includes('402') || msg.includes('prepayment') || msg.includes('credits are depleted')) {
+        msg = 'Gemini API credits are depleted on the Google AI Studio project. You can click "Load Test Delivery Stops" below to immediately test route optimization and navigation deep links with the real Los Angeles manifest data!';
+      }
+      setErrorMessage(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Preload sample addresses directly from test manifest
+  const handleUseSampleAddresses = (sampleList) => {
+    setErrorMessage(null);
+    if (sampleList && sampleList.length > 0) {
+      // Use first stop as origin if empty or present
+      setOriginAddress(sampleList[0]);
+      const remainingStops = sampleList.slice(1).map((addr) => ({
+        originalExtractedText: addr,
+        correctedAddress: addr,
+        isManuallyEdited: false,
+      }));
+      setStops(remainingStops);
+      setCurrentStep('verify');
+    }
+  };
+
+  // Step 2: Optimize route with Google Routes API & Geocoding
+  const handleOptimize = async () => {
+    const validStops = stops
+      .filter((s) => s.correctedAddress && s.correctedAddress.trim().length > 0)
+      .map((s) => ({ ...s, correctedAddress: s.correctedAddress.trim() }));
+
+    // Prepare combined list of stops (with origin prepended if provided)
+    const combinedStops = [];
+    if (originAddress && originAddress.trim()) {
+      combinedStops.push({
+        originalExtractedText: originAddress.trim(),
+        correctedAddress: originAddress.trim(),
+        isManuallyEdited: false,
+      });
+    }
+
+    combinedStops.push(...validStops);
+
+    if (combinedStops.length === 0) {
+      setErrorMessage('Please provide at least one address or starting location to optimize.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const response = await optimizeRoute({
+        driverId: selectedDriverId,
+        routeDate,
+        stops: combinedStops,
+      });
+
+      setManifest(response);
+      setCurrentStep('drive');
+    } catch (err) {
+      console.error('Optimize error:', err);
+      setErrorMessage(err.message || 'Route optimization failed. Please verify your address inputs.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Reset entire workflow back to Step 1
+  const handleResetWorkflow = () => {
+    setManifest(null);
+    setStops([]);
+    setFiles([]);
+    setErrorMessage(null);
+    setCurrentStep('upload');
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center">
+      {/* Mobile-first centered container */}
+      <main className="w-full max-w-md min-h-screen bg-slate-900 shadow-2xl flex flex-col border-x border-slate-800 relative">
+        <Header isOnline={isOnline} onRefreshHealth={checkHealth} />
+
+        <StepIndicator
+          currentStep={currentStep}
+          maxAllowedStep={maxAllowedStep}
+          onStepClick={(stepKey) => {
+            setErrorMessage(null);
+            setCurrentStep(stepKey);
+          }}
+        />
+
+        <ErrorBanner
+          message={errorMessage}
+          onDismiss={() => setErrorMessage(null)}
+        />
+
+        {currentStep === 'upload' && (
+          <Step1Upload
+            files={files}
+            setFiles={setFiles}
+            onExtract={handleExtract}
+            isLoading={isLoading}
+            onUseSampleAddresses={handleUseSampleAddresses}
+          />
+        )}
+
+        {currentStep === 'verify' && (
+          <Step2Verify
+            originAddress={originAddress}
+            setOriginAddress={setOriginAddress}
+            stops={stops}
+            setStops={setStops}
+            drivers={drivers}
+            selectedDriverId={selectedDriverId}
+            setSelectedDriverId={setSelectedDriverId}
+            routeDate={routeDate}
+            setRouteDate={setRouteDate}
+            onOptimize={handleOptimize}
+            onBackToUpload={() => {
+              setErrorMessage(null);
+              setCurrentStep('upload');
+            }}
+            isLoading={isLoading}
+          />
+        )}
+
+        {currentStep === 'drive' && (
+          <Step3Drive
+            manifest={manifest}
+            onResetWorkflow={handleResetWorkflow}
+            onBackToEdit={() => {
+              setErrorMessage(null);
+              setCurrentStep('verify');
+            }}
+          />
+        )}
+      </main>
+    </div>
+  );
+}
