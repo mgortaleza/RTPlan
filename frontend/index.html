@@ -5,13 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#4f46e5" />
     <meta name="description" content="NetYX Route Planner: Mobile-first multi-stop logistics route dispatch & optimization tool" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, proxy-revalidate, max-age=0" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>NetYX Route Planner</title>
+
+    <script>
+      // Self-healing: Detect stale bundle or dynamic chunk loading failure
+      window.addEventListener('error', function(event) {
+        var msg = (event.message || '').toLowerCase();
+        var isModuleOrCacheError = msg.includes('dynamically imported module') ||
+                                   msg.includes('loading chunk') ||
+                                   msg.includes('unexpected token \'<\'') ||
+                                   msg.includes('failed to fetch');
+        if (isModuleOrCacheError) {
+          console.warn('Stale cache or chunk loading failure detected. Recovering...');
+          var reloadKey = 'rtplan_auto_reload_ts';
+          var lastReload = parseInt(sessionStorage.getItem(reloadKey) || '0', 10);
+          if (Date.now() - lastReload > 8000) {
+            sessionStorage.setItem(reloadKey, String(Date.now()));
+            try { localStorage.clear(); } catch(e) {}
+            window.location.href = window.location.pathname + '?nocache=' + Date.now();
+          }
+        }
+      });
+
+      // Show manual recovery button if React doesn't mount within 3.5 seconds
+      setTimeout(function() {
+        var recoveryBtn = document.getElementById('netyx-recovery-action');
+        if (recoveryBtn) {
+          recoveryBtn.style.display = 'block';
+        }
+      }, 3500);
+    </script>
   </head>
   <body class="bg-slate-100 text-slate-900 antialiased overflow-x-hidden">
-    <div id="root"></div>
+    <!-- Immediate CSS-only fallback loader: Prevents blank white screen while scripts load -->
+    <div id="root">
+      <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; padding: 20px;">
+        <div style="width: 52px; height: 52px; border-radius: 18px; background: linear-gradient(135deg, #4f46e5, #6366f1); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(79,70,229,0.3); margin-bottom: 16px;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+          </svg>
+        </div>
+        <div style="font-weight: 900; font-size: 19px; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.02em;">
+          NetYX <span style="color: #4f46e5;">Route Planner</span>
+        </div>
+        <div style="font-size: 13px; color: #64748b; font-weight: 500; margin-bottom: 24px;">
+          Initializing delivery dispatcher...
+        </div>
+        <div style="width: 30px; height: 30px; border: 3px solid #e2e8f0; border-top-color: #4f46e5; border-radius: 50%; animation: netyx-spin 0.75s linear infinite;"></div>
+
+        <div id="netyx-recovery-action" style="display: none; margin-top: 24px; text-align: center; max-width: 280px;">
+          <p style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Taking longer than expected?</p>
+          <button
+            type="button"
+            onclick="try { localStorage.clear(); sessionStorage.clear(); } catch(e) {} window.location.href = window.location.pathname + '?nocache=' + Date.now();"
+            style="background-color: #4f46e5; color: white; border: none; padding: 10px 18px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(79,70,229,0.25);"
+          >
+            Clear Cache & Reload
+          </button>
+        </div>
+
+        <style>
+          @keyframes netyx-spin { to { transform: rotate(360deg); } }
+        </style>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

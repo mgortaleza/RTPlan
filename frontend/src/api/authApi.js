@@ -58,8 +58,16 @@ export function logout() {
 
 /**
  * Retrieves the currently saved user from localStorage.
+ * Validates integrity so corrupted cache does not crash the app.
  * @returns {Object|null}
  */
 export function getStoredUser() {
-  return loadFromStorage(AUTH_USER_KEY, null);
+  const user = loadFromStorage(AUTH_USER_KEY, null);
+  if (!user || typeof user !== 'object') return null;
+  // If the user object is missing identity fields, purge it
+  if (!user.username && !user.fullName) {
+    removeFromStorage(AUTH_USER_KEY);
+    return null;
+  }
+  return user;
 }

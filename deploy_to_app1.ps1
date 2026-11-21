@@ -89,9 +89,15 @@ http {
         root   C:/RTPlanner/frontend;
         index  index.html;
 
+        location = /index.html {
+            add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+            expires -1;
+        }
+
         location / {
             try_files `$uri `$uri/ /index.html;
-            add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+            add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+            expires -1;
         }
 
         location /assets/ {

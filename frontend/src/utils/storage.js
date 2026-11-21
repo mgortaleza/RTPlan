@@ -10,10 +10,22 @@ export function loadFromStorage(key, fallback = null) {
   if (typeof window === 'undefined') return fallback;
   try {
     const raw = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
-    if (raw === null || raw === undefined) return fallback;
-    return JSON.parse(raw);
+    if (
+      raw === null ||
+      raw === undefined ||
+      raw === '' ||
+      raw === 'undefined' ||
+      raw === 'null'
+    ) {
+      return fallback;
+    }
+    const parsed = JSON.parse(raw);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
   } catch (err) {
-    console.warn(`Failed to read "${key}" from localStorage:`, err);
+    console.warn(`Failed to read "${key}" from localStorage, resetting corrupted key:`, err);
+    try {
+      localStorage.removeItem(`${STORAGE_PREFIX}${key}`);
+    } catch {}
     return fallback;
   }
 }

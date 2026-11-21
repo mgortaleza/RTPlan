@@ -64,8 +64,8 @@ export default function Step2Verify({
     if (isDriverRole && drivers && drivers.length > 0) {
       const match = drivers.find(
         (d) =>
-          d.fullName.toLowerCase() === (currentUser?.fullName || '').toLowerCase() ||
-          d.fullName.toLowerCase() === (currentUser?.username || '').toLowerCase()
+          (d?.fullName || '').toLowerCase() === (currentUser?.fullName || '').toLowerCase() ||
+          (d?.fullName || '').toLowerCase() === (currentUser?.username || '').toLowerCase()
       );
       if (match && selectedDriverId !== match.driverId) {
         setSelectedDriverId(match.driverId);

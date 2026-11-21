@@ -46,12 +46,22 @@ export default function App() {
   );
 
   const [currentStep, setCurrentStep] = useState(() => {
-    const savedStep = loadFromStorage('current_step', null);
-    if (savedStep) return savedStep;
     const savedManifest = loadFromStorage('manifest', null);
-    if (savedManifest) return 'drive';
     const savedStops = loadFromStorage('stops', []);
-    if (savedStops && savedStops.length > 0) return 'verify';
+    const validSavedStops = (savedStops || []).filter(
+      (s) => s && s.correctedAddress && s.correctedAddress.trim().length > 0
+    );
+    const savedOrigin = loadFromStorage('origin', '');
+    const savedStep = loadFromStorage('current_step', null);
+
+    if (savedStep === 'drive' && savedManifest) return 'drive';
+    if (savedStep === 'verify' && (validSavedStops.length > 0 || (savedOrigin && savedOrigin.trim().length > 0))) {
+      return 'verify';
+    }
+    if (savedStep === 'upload') return 'upload';
+
+    if (savedManifest) return 'drive';
+    if (validSavedStops.length > 0) return 'verify';
     return 'upload';
   });
 
@@ -120,7 +130,7 @@ export default function App() {
           // If logged in user matches a driver name, preselect that driver!
           if (currentUser?.fullName) {
             const matched = driverList.find(
-              (d) => d.fullName.toLowerCase() === currentUser.fullName.toLowerCase()
+              (d) => (d?.fullName || '').toLowerCase() === (currentUser.fullName || '').toLowerCase()
             );
             if (matched) return matched.driverId;
           }
@@ -513,20 +523,33 @@ export default function App() {
             )}
 
             {currentStep === 'drive' && (
-              <Step3Drive
-                manifest={manifest}
-                onResetWorkflow={handleResetWorkflow}
-                onBackToEdit={() => {
-                  setErrorMessage(null);
-                  setCurrentStep('verify');
-                }}
-                onBackToUpload={() => {
-                  setErrorMessage(null);
-                  pruneEmptyStops();
-                  setCurrentStep('upload');
-                }}
-                onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
-              />
+              manifest ? (
+                <Step3Drive
+                  manifest={manifest}
+                  onResetWorkflow={handleResetWorkflow}
+                  onBackToEdit={() => {
+                    setErrorMessage(null);
+                    setCurrentStep('verify');
+                  }}
+                  onBackToUpload={() => {
+                    setErrorMessage(null);
+                    pruneEmptyStops();
+                    setCurrentStep('upload');
+                  }}
+                  onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
+                />
+              ) : (
+                <div className="p-8 text-center space-y-3">
+                  <p className="text-xs text-slate-500 font-medium">No active route found.</p>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep('upload')}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold"
+                  >
+                    Start New Route
+                  </button>
+                </div>
+              )
             )}
           </>
         )}
