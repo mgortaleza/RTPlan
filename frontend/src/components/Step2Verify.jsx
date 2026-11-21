@@ -13,6 +13,9 @@ import {
   RotateCcw,
   User,
   Calendar,
+  ArrowRight,
+  ArrowLeft,
+  Eye,
 } from 'lucide-react';
 
 export default function Step2Verify({
@@ -25,8 +28,10 @@ export default function Step2Verify({
   setSelectedDriverId,
   routeDate,
   setRouteDate,
+  manifest = null,
   onOptimize,
   onBackToUpload,
+  onGoToDrive,
   isLoading,
 }) {
   const handleAddressChange = (index, value) => {
@@ -79,9 +84,9 @@ export default function Step2Verify({
   const totalStopCount = stops.filter((s) => s.correctedAddress?.trim()).length + (originAddress.trim() ? 1 : 0);
 
   return (
-    <div className="flex flex-col flex-1 pb-32">
+    <div className="flex flex-col flex-1 pb-36">
       <div className="p-4 space-y-4">
-        {/* Header Summary */}
+        {/* Navigation & Header Summary */}
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-white">Verify & Edit Addresses</h2>
@@ -94,29 +99,49 @@ export default function Step2Verify({
           </div>
         </div>
 
+        {/* Quick shortcut if manifest already exists */}
+        {manifest && onGoToDrive && (
+          <div className="bg-indigo-950/40 border border-indigo-700/50 rounded-xl p-3 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Navigation className="w-4 h-4 text-indigo-400" />
+              <span className="text-xs text-indigo-200">
+                Manifest #{manifest.manifestId} already generated
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={onGoToDrive}
+              className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center space-x-1"
+            >
+              <span>View Route</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+
         {/* Dispatch Settings (Driver & Date) */}
         <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5 space-y-2.5">
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-400 mb-1 flex items-center space-x-1">
+              <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1 flex items-center space-x-1">
                 <User className="w-3 h-3 text-indigo-400" />
                 <span>Driver</span>
               </label>
               <select
                 value={selectedDriverId}
                 onChange={(e) => setSelectedDriverId(Number(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
               >
                 {drivers.map((d) => (
                   <option key={d.driverId} value={d.driverId}>
-                    {d.fullName} (ID #{d.driverId})
+                    {d.fullName}
                   </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-400 mb-1 flex items-center space-x-1">
+              <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1 flex items-center space-x-1">
                 <Calendar className="w-3 h-3 text-indigo-400" />
                 <span>Route Date</span>
               </label>
@@ -124,21 +149,22 @@ export default function Step2Verify({
                 type="date"
                 value={routeDate}
                 onChange={(e) => setRouteDate(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition-colors"
-              />
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+              >
+              </input>
             </div>
           </div>
         </div>
 
-        {/* Starting Origin Address Card */}
-        <div className="bg-gradient-to-br from-emerald-950/40 via-slate-800/70 to-slate-800/70 border border-emerald-800/40 rounded-2xl p-3.5 shadow-sm space-y-2">
+        {/* Starting Origin Address Input */}
+        <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5 space-y-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-1.5 text-emerald-400 font-semibold text-xs">
-              <Building2 className="w-4 h-4" />
-              <span>Starting Origin (Depot / Warehouse)</span>
-            </div>
-            <span className="text-[10px] text-emerald-400/80 font-medium bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800/50">
-              Start Pin
+            <label className="block text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center space-x-1.5">
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Starting Origin (Depot / Start Location)</span>
+            </label>
+            <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">
+              Stop #1
             </span>
           </div>
 
@@ -148,109 +174,143 @@ export default function Step2Verify({
               value={originAddress}
               onChange={(e) => setOriginAddress(e.target.value)}
               placeholder="e.g. 200 Medical Plaza, Los Angeles, CA 90095"
-              className="w-full bg-slate-900/90 border border-emerald-700/50 focus:border-emerald-500 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+              className="w-full bg-slate-900 border border-emerald-500/40 focus:border-emerald-400 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-400/30"
             />
           </div>
 
-          {/* Preset Origin Chips */}
-          <div className="flex items-center space-x-2 pt-1 overflow-x-auto no-scrollbar">
-            <span className="text-[10px] text-slate-400 shrink-0">Quick presets:</span>
+          {/* Quick presets */}
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            <span className="text-[10px] text-slate-500 self-center mr-1">Presets:</span>
             <button
               type="button"
               onClick={() => applyPresetOrigin('200 Medical Plaza, Los Angeles, CA 90095')}
-              className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium shrink-0 border border-slate-700 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
             >
-              UCLA Medical Plaza
+              UCLA Plaza
             </button>
             <button
               type="button"
-              onClick={() => applyPresetOrigin('757 Westwood Plaza, Los Angeles, CA 90095')}
-              className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium shrink-0 border border-slate-700 transition-colors"
+              onClick={() => applyPresetOrigin('Current Location')}
+              className="text-[10px] px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
             >
-              Ronald Reagan Pharmacy
+              GPS Current
             </button>
           </div>
         </div>
 
-        {/* Stops List */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between px-1">
+        {/* Extracted Stops List */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
             <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
               Delivery Stops ({stops.length})
             </h3>
-            <span className="text-[11px] text-slate-400">TSP order will be calculated</span>
+            <span className="text-[10px] text-slate-400">
+              Drag or tap arrows to reorder
+            </span>
           </div>
 
           {stops.length === 0 ? (
-            <div className="p-6 rounded-2xl border border-dashed border-slate-800 text-center bg-slate-900/40">
-              <AlertTriangle className="w-8 h-8 text-amber-400/80 mx-auto mb-2" />
-              <p className="text-xs font-medium text-slate-300">No delivery stops added</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">Click '+ Add Stop' below or go back to upload screenshots</p>
+            <div className="p-8 text-center rounded-2xl bg-slate-800/30 border border-slate-800">
+              <MapPin className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+              <p className="text-xs text-slate-400">No delivery stops added yet.</p>
+              <button
+                type="button"
+                onClick={handleAddStop}
+                className="mt-3 px-3 py-1.5 rounded-xl bg-indigo-600/30 text-indigo-300 text-xs font-medium hover:bg-indigo-600/50 transition-colors inline-flex items-center space-x-1"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add first stop manually</span>
+              </button>
             </div>
           ) : (
-            stops.map((stop, idx) => (
-              <div
-                key={idx}
-                className="group relative bg-slate-800/80 hover:bg-slate-800 border border-slate-700/70 rounded-2xl p-3 shadow-sm transition-all focus-within:border-indigo-500/80"
-              >
-                <div className="flex items-start space-x-2.5">
-                  {/* Sequence Badge */}
-                  <div className="w-7 h-7 rounded-xl bg-slate-900 text-indigo-400 border border-slate-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                    {idx + 1}
-                  </div>
+            <div className="space-y-2.5">
+              {stops.map((stop, index) => {
+                const isEdited = stop.isManuallyEdited;
+                const stopNumber = (originAddress.trim() ? 2 : 1) + index;
 
-                  {/* Input area */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[11px] font-medium text-slate-400">Stop #{idx + 1}</span>
-                      {stop.isManuallyEdited && (
-                        <span className="text-[10px] font-semibold text-amber-400 bg-amber-950/60 border border-amber-800/50 px-1.5 py-0.2 rounded">
-                          Edited
+                return (
+                  <div
+                    key={`stop-${index}`}
+                    className={`rounded-2xl p-3 border transition-all ${
+                      isEdited
+                        ? 'bg-slate-800/90 border-indigo-500/50 shadow-sm'
+                        : 'bg-slate-800/60 border-slate-700/60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center space-x-2">
+                        <span className="w-5 h-5 rounded-md bg-indigo-600/30 text-indigo-300 text-[10px] font-bold flex items-center justify-center">
+                          {stopNumber}
                         </span>
-                      )}
+                        <span className="text-[11px] font-semibold text-slate-300">
+                          Stop #{stopNumber}
+                        </span>
+                        {isEdited && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-900/60 text-indigo-300 border border-indigo-700/50">
+                            Edited
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Stop Controls (Reorder & Delete) */}
+                      <div className="flex items-center space-x-1">
+                        <button
+                          type="button"
+                          disabled={index === 0}
+                          onClick={() => handleMoveStop(index, -1)}
+                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move Up"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={index === stops.length - 1}
+                          onClick={() => handleMoveStop(index, 1)}
+                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move Down"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteStop(index)}
+                          className="p-1 rounded text-rose-400 hover:text-rose-300 ml-1"
+                          title="Delete Stop"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
+
+                    {/* Address Textarea/Input */}
                     <textarea
                       rows={2}
                       value={stop.correctedAddress}
-                      onChange={(e) => handleAddressChange(idx, e.target.value)}
-                      placeholder="Enter full street address, city, state, ZIP"
-                      className="w-full bg-slate-900/80 border border-slate-700 focus:border-indigo-500 rounded-xl p-2 text-xs text-white placeholder-slate-500 focus:outline-none resize-none leading-relaxed transition-colors"
+                      onChange={(e) => handleAddressChange(index, e.target.value)}
+                      placeholder="Enter street address, city, state, zip..."
+                      className="w-full bg-slate-900/80 border border-slate-700 focus:border-indigo-400 rounded-xl p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-400/30 resize-none"
                     />
-                  </div>
 
-                  {/* Reorder and Delete Actions */}
-                  <div className="flex flex-col space-y-1 shrink-0">
-                    <button
-                      type="button"
-                      disabled={idx === 0}
-                      onClick={() => handleMoveStop(idx, -1)}
-                      className="w-7 h-7 rounded-lg bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 disabled:hover:bg-slate-900/80 flex items-center justify-center transition-colors"
-                      title="Move up"
-                    >
-                      <ArrowUp className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={idx === stops.length - 1}
-                      onClick={() => handleMoveStop(idx, 1)}
-                      className="w-7 h-7 rounded-lg bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-20 disabled:hover:bg-slate-900/80 flex items-center justify-center transition-colors"
-                      title="Move down"
-                    >
-                      <ArrowDown className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteStop(idx)}
-                      className="w-7 h-7 rounded-lg bg-slate-900/80 text-rose-400 hover:text-white hover:bg-rose-600 flex items-center justify-center transition-colors"
-                      title="Delete stop"
-                      aria-label="Delete stop"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {/* Original OCR text reference */}
+                    {stop.originalExtractedText && stop.originalExtractedText !== stop.correctedAddress && (
+                      <div className="mt-1 flex items-center space-x-1 text-[10px] text-slate-400">
+                        <span className="text-slate-500">OCR:</span>
+                        <span className="truncate">{stop.originalExtractedText}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleAddressChange(index, stop.originalExtractedText)}
+                          className="text-indigo-400 hover:underline shrink-0 ml-1"
+                          title="Revert to original OCR text"
+                        >
+                          Revert
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
-            ))
+                );
+              })}
+            </div>
           )}
 
           {/* Add Stop Button */}
@@ -260,13 +320,13 @@ export default function Step2Verify({
             className="w-full min-h-[46px] rounded-2xl border-2 border-dashed border-slate-700 hover:border-indigo-400 bg-slate-800/40 hover:bg-slate-800/80 text-slate-300 hover:text-indigo-400 font-semibold text-xs flex items-center justify-center space-x-2 transition-all active:scale-[0.99]"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Delivery Stop</span>
+            <span>Add Delivery Stop Manually</span>
           </button>
         </div>
       </div>
 
       {/* Sticky Bottom Actions Bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/90 backdrop-blur-lg border-t border-slate-800/80 z-20 max-w-md mx-auto space-y-2">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800/80 z-20 max-w-md mx-auto space-y-2">
         <button
           type="button"
           disabled={totalStopCount === 0 || isLoading}
@@ -285,19 +345,36 @@ export default function Step2Verify({
           ) : (
             <>
               <Navigation className="w-5 h-5 text-emerald-200" />
-              <span>Optimize Route ({totalStopCount} {totalStopCount === 1 ? 'Stop' : 'Stops'})</span>
+              <span>
+                {manifest ? 'Re-Optimize Route' : 'Optimize Route'} ({totalStopCount} {totalStopCount === 1 ? 'Stop' : 'Stops'})
+              </span>
             </>
           )}
         </button>
 
-        <button
-          type="button"
-          onClick={onBackToUpload}
-          disabled={isLoading}
-          className="w-full py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
-        >
-          Back to Screenshot Upload
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onBackToUpload}
+            disabled={isLoading}
+            className="flex-1 min-h-[38px] rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold flex items-center justify-center space-x-1 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Upload</span>
+          </button>
+
+          {manifest && onGoToDrive && (
+            <button
+              type="button"
+              onClick={onGoToDrive}
+              disabled={isLoading}
+              className="flex-1 min-h-[38px] rounded-xl bg-indigo-900/60 hover:bg-indigo-900 text-indigo-300 hover:text-white border border-indigo-700/60 text-xs font-semibold flex items-center justify-center space-x-1 transition-colors"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>View Active Route</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -11,19 +11,69 @@ import {
   getActiveDrivers,
   checkBackendHealth,
 } from './api/routesApi';
+import {
+  loadFromStorage,
+  saveToStorage,
+  clearRouteStorage,
+} from './utils/storage';
 
 export default function App() {
-  const [currentStep, setCurrentStep] = useState('upload'); // 'upload' | 'verify' | 'drive'
+  // Restore persisted state or defaults
+  const [manifest, setManifest] = useState(() => loadFromStorage('manifest', null));
+  const [stops, setStops] = useState(() => loadFromStorage('stops', []));
+  const [originAddress, setOriginAddress] = useState(() =>
+    loadFromStorage('origin', '200 Medical Plaza, Los Angeles, CA 90095')
+  );
+  const [selectedDriverId, setSelectedDriverId] = useState(() =>
+    loadFromStorage('driver_id', 1)
+  );
+  const [routeDate, setRouteDate] = useState(() =>
+    loadFromStorage('route_date', new Date().toISOString().split('T')[0])
+  );
+
+  const [currentStep, setCurrentStep] = useState(() => {
+    const savedStep = loadFromStorage('current_step', null);
+    if (savedStep) return savedStep;
+    const savedManifest = loadFromStorage('manifest', null);
+    if (savedManifest) return 'drive';
+    const savedStops = loadFromStorage('stops', []);
+    if (savedStops && savedStops.length > 0) return 'verify';
+    return 'upload';
+  });
+
   const [files, setFiles] = useState([]);
-  const [originAddress, setOriginAddress] = useState('200 Medical Plaza, Los Angeles, CA 90095');
-  const [stops, setStops] = useState([]);
-  const [drivers, setDrivers] = useState([{ driverId: 1, fullName: 'Primary Driver', isActive: true }]);
-  const [selectedDriverId, setSelectedDriverId] = useState(1);
-  const [routeDate, setRouteDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [manifest, setManifest] = useState(null);
+  const [drivers, setDrivers] = useState([
+    { driverId: 1, fullName: 'Primary Driver', isActive: true },
+  ]);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [infoMessage, setInfoMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+
+  // Sync state changes to localStorage
+  useEffect(() => {
+    saveToStorage('current_step', currentStep);
+  }, [currentStep]);
+
+  useEffect(() => {
+    saveToStorage('manifest', manifest);
+  }, [manifest]);
+
+  useEffect(() => {
+    saveToStorage('stops', stops);
+  }, [stops]);
+
+  useEffect(() => {
+    saveToStorage('origin', originAddress);
+  }, [originAddress]);
+
+  useEffect(() => {
+    saveToStorage('driver_id', selectedDriverId);
+  }, [selectedDriverId]);
+
+  useEffect(() => {
+    saveToStorage('route_date', routeDate);
+  }, [routeDate]);
 
   // Check backend health on mount
   const checkHealth = useCallback(async () => {
@@ -31,7 +81,7 @@ export default function App() {
     setIsOnline(alive);
     if (!alive) {
       setErrorMessage((prev) =>
-        prev || 'Cannot connect to Spring Boot backend at http://localhost:8080. Please ensure the backend server is running.'
+        prev || 'Cannot connect to Spring Boot backend. Please ensure the backend server is running.'
       );
     }
   }, []);
@@ -42,42 +92,73 @@ export default function App() {
     getActiveDrivers().then((driverList) => {
       if (driverList && driverList.length > 0) {
         setDrivers(driverList);
-        setSelectedDriverId(driverList[0].driverId);
+        setSelectedDriverId((prev) => {
+          const exists = driverList.some((d) => d.driverId === prev);
+          return exists ? prev : driverList[0].driverId;
+        });
       }
     });
   }, [checkHealth]);
 
-  // Max step user can navigate backwards or forwards to
+  // Step navigation rules
+  const canGoToVerify = stops.length > 0 || manifest !== null;
+  const canGoToDrive = manifest !== null;
   const maxAllowedStep = manifest ? 3 : stops.length > 0 ? 2 : 1;
 
-  // Step 1: Extract addresses using Gemini OCR
+  // Step 1: Extract addresses using Gemini OCR (Appends to existing stops to avoid rescanning!)
   const handleExtract = async () => {
     if (files.length === 0) return;
     setIsLoading(true);
     setErrorMessage(null);
+    setInfoMessage(null);
 
     try {
       const extracted = await extractAddresses(files);
       if (!extracted || extracted.length === 0) {
-        setErrorMessage('No addresses could be detected in the uploaded images. You can manually enter stops or try different photos.');
+        setErrorMessage(
+          'No addresses could be detected in the uploaded images. You can manually enter stops or try different photos.'
+        );
         setIsLoading(false);
         return;
       }
 
       // Convert extracted address strings into stop objects
-      const newStops = extracted.map((addr) => ({
+      const newExtractedStops = extracted.map((addr) => ({
         originalExtractedText: addr,
         correctedAddress: addr,
         isManuallyEdited: false,
       }));
 
-      setStops(newStops);
+      // Append new stops, filtering out duplicate addresses
+      setStops((prevStops) => {
+        if (!prevStops || prevStops.length === 0) {
+          return newExtractedStops;
+        }
+
+        const existingAddresses = new Set(
+          prevStops.map((s) => (s.correctedAddress || '').trim().toUpperCase())
+        );
+
+        const uniqueNew = newExtractedStops.filter(
+          (s) => !existingAddresses.has(s.correctedAddress.trim().toUpperCase())
+        );
+
+        return [...prevStops, ...uniqueNew];
+      });
+
+      // Clear the selected file inputs now that extraction succeeded
+      setFiles([]);
       setCurrentStep('verify');
     } catch (err) {
       console.error('Extract error:', err);
       let msg = err.message || 'Failed to extract addresses.';
-      if (msg.includes('402') || msg.includes('prepayment') || msg.includes('credits are depleted')) {
-        msg = 'Gemini API credits are depleted on the Google AI Studio project. You can click "Load Test Delivery Stops" below to immediately test route optimization and navigation deep links with the real Los Angeles manifest data!';
+      if (
+        msg.includes('402') ||
+        msg.includes('prepayment') ||
+        msg.includes('credits are depleted')
+      ) {
+        msg =
+          'Gemini API credits are depleted on the Google AI Studio project. You can click "Load Test Delivery Stops" below to immediately test route optimization and navigation deep links with the real Los Angeles manifest data!';
       }
       setErrorMessage(msg);
     } finally {
@@ -88,8 +169,8 @@ export default function App() {
   // Preload sample addresses directly from test manifest
   const handleUseSampleAddresses = (sampleList) => {
     setErrorMessage(null);
+    setInfoMessage(null);
     if (sampleList && sampleList.length > 0) {
-      // Use first stop as origin if empty or present
       setOriginAddress(sampleList[0]);
       const remainingStops = sampleList.slice(1).map((addr) => ({
         originalExtractedText: addr,
@@ -107,7 +188,6 @@ export default function App() {
       .filter((s) => s.correctedAddress && s.correctedAddress.trim().length > 0)
       .map((s) => ({ ...s, correctedAddress: s.correctedAddress.trim() }));
 
-    // Prepare combined list of stops (with origin prepended if provided)
     const combinedStops = [];
     if (originAddress && originAddress.trim()) {
       combinedStops.push({
@@ -126,6 +206,7 @@ export default function App() {
 
     setIsLoading(true);
     setErrorMessage(null);
+    setInfoMessage(null);
 
     try {
       const response = await optimizeRoute({
@@ -144,12 +225,20 @@ export default function App() {
     }
   };
 
+  // Clear existing stops if user wants to start a new list from Step 1
+  const handleClearStops = () => {
+    setStops([]);
+    setFiles([]);
+  };
+
   // Reset entire workflow back to Step 1
   const handleResetWorkflow = () => {
+    clearRouteStorage();
     setManifest(null);
     setStops([]);
     setFiles([]);
     setErrorMessage(null);
+    setInfoMessage(null);
     setCurrentStep('upload');
   };
 
@@ -162,8 +251,11 @@ export default function App() {
         <StepIndicator
           currentStep={currentStep}
           maxAllowedStep={maxAllowedStep}
+          canGoToVerify={canGoToVerify}
+          canGoToDrive={canGoToDrive}
           onStepClick={(stepKey) => {
             setErrorMessage(null);
+            setInfoMessage(null);
             setCurrentStep(stepKey);
           }}
         />
@@ -177,7 +269,18 @@ export default function App() {
           <Step1Upload
             files={files}
             setFiles={setFiles}
+            stops={stops}
+            manifest={manifest}
             onExtract={handleExtract}
+            onGoToVerify={() => {
+              setErrorMessage(null);
+              setCurrentStep('verify');
+            }}
+            onGoToDrive={() => {
+              setErrorMessage(null);
+              setCurrentStep('drive');
+            }}
+            onClearStops={handleClearStops}
             isLoading={isLoading}
             onUseSampleAddresses={handleUseSampleAddresses}
           />
@@ -194,10 +297,15 @@ export default function App() {
             setSelectedDriverId={setSelectedDriverId}
             routeDate={routeDate}
             setRouteDate={setRouteDate}
+            manifest={manifest}
             onOptimize={handleOptimize}
             onBackToUpload={() => {
               setErrorMessage(null);
               setCurrentStep('upload');
+            }}
+            onGoToDrive={() => {
+              setErrorMessage(null);
+              setCurrentStep('drive');
             }}
             isLoading={isLoading}
           />
@@ -210,6 +318,10 @@ export default function App() {
             onBackToEdit={() => {
               setErrorMessage(null);
               setCurrentStep('verify');
+            }}
+            onBackToUpload={() => {
+              setErrorMessage(null);
+              setCurrentStep('upload');
             }}
           />
         )}
