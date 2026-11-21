@@ -18,6 +18,7 @@ public class RootController {
                 "version", "1.0.0-SNAPSHOT",
                 "timestamp", LocalDateTime.now().toString(),
                 "endpoints", Map.of(
+                        "authLogin", "POST /api/auth/login",
                         "drivers", "GET /api/drivers, POST /api/drivers",
                         "extractAddresses", "POST /api/routes/extract",
                         "optimizeRoute", "POST /api/routes/optimize",

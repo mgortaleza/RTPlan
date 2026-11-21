@@ -14,17 +14,6 @@ import {
   History,
 } from 'lucide-react';
 
-// Sample LA Addresses directly from C:\DEV\RTPlanner\TestImages for quick testing
-const SAMPLE_TEST_ADDRESSES = [
-  "200 Medical Plaza, Los Angeles, CA 90095",
-  "10320 ALMAYO AVE APT 2, LOS ANGELES, CA 90064",
-  "3207 CORINTH AVE, LOS ANGELES, CA 90066",
-  "11131 ROSE AVE APT 21, LOS ANGELES, CA 90034",
-  "2749 South Sepulveda Blvd, Los Angeles, CA 90064",
-  "2567 VETERAN AVE, RANCHO PARK, CA 90064",
-  "1932 PELHAM AVE, LOS ANGELES, CA 90025",
-];
-
 export default function Step1Upload({
   files,
   setFiles,
@@ -36,7 +25,6 @@ export default function Step1Upload({
   onClearStops,
   onOpenRecentRoutes,
   isLoading,
-  onUseSampleAddresses,
 }) {
   const fileInputRef = useRef(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -276,29 +264,6 @@ export default function Step1Upload({
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
-            </button>
-          )}
-
-          {!hasExistingStops && (
-            <button
-              type="button"
-              onClick={() => onUseSampleAddresses(SAMPLE_TEST_ADDRESSES)}
-              className="w-full flex items-center justify-between p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200 text-left transition-all group"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
-                    Load Test Delivery Stops
-                  </p>
-                  <p className="text-[11px] text-slate-500">
-                    Preload the 7 Los Angeles stops from test manifest photos
-                  </p>
-                </div>
-              </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-700 transition-colors" />
             </button>
           )}
         </div>

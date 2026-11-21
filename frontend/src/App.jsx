@@ -5,6 +5,7 @@ import ErrorBanner from './components/ErrorBanner';
 import Step1Upload from './components/Step1Upload';
 import Step2Verify from './components/Step2Verify';
 import Step3Drive from './components/Step3Drive';
+import LoginPage from './components/LoginPage';
 import RecentRoutesModal from './components/RecentRoutesModal';
 import {
   extractAddresses,
@@ -13,12 +14,19 @@ import {
   checkBackendHealth,
 } from './api/routesApi';
 import {
+  getStoredUser,
+  logout,
+} from './api/authApi';
+import {
   loadFromStorage,
   saveToStorage,
   clearRouteStorage,
 } from './utils/storage';
 
 export default function App() {
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState(() => getStoredUser());
+
   // Restore persisted state or defaults
   const [manifest, setManifest] = useState(() => loadFromStorage('manifest', null));
   const [stops, setStops] = useState(() => loadFromStorage('stops', []));
@@ -95,12 +103,29 @@ export default function App() {
       if (driverList && driverList.length > 0) {
         setDrivers(driverList);
         setSelectedDriverId((prev) => {
+          // If logged in user matches a driver name, preselect that driver!
+          if (currentUser?.fullName) {
+            const matched = driverList.find(
+              (d) => d.fullName.toLowerCase() === currentUser.fullName.toLowerCase()
+            );
+            if (matched) return matched.driverId;
+          }
           const exists = driverList.some((d) => d.driverId === prev);
           return exists ? prev : driverList[0].driverId;
         });
       }
     });
-  }, [checkHealth]);
+  }, [checkHealth, currentUser]);
+
+  const handleLogout = () => {
+    logout();
+    setCurrentUser(null);
+  };
+
+  // If user is not authenticated, render Login Page
+  if (!currentUser) {
+    return <LoginPage onLoginSuccess={setCurrentUser} />;
+  }
 
   // Step navigation rules
   const canGoToVerify = stops.length > 0 || manifest !== null;
@@ -154,33 +179,9 @@ export default function App() {
     } catch (err) {
       console.error('Extract error:', err);
       let msg = err.message || 'Failed to extract addresses.';
-      if (
-        msg.includes('402') ||
-        msg.includes('prepayment') ||
-        msg.includes('credits are depleted')
-      ) {
-        msg =
-          'Gemini API credits are depleted on the Google AI Studio project. You can click "Load Test Delivery Stops" below to immediately test route optimization and navigation deep links with the real Los Angeles manifest data!';
-      }
       setErrorMessage(msg);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Preload sample addresses directly from test manifest
-  const handleUseSampleAddresses = (sampleList) => {
-    setErrorMessage(null);
-    setInfoMessage(null);
-    if (sampleList && sampleList.length > 0) {
-      setOriginAddress(sampleList[0]);
-      const remainingStops = sampleList.slice(1).map((addr) => ({
-        originalExtractedText: addr,
-        correctedAddress: addr,
-        isManuallyEdited: false,
-      }));
-      setStops(remainingStops);
-      setCurrentStep('verify');
     }
   };
 
@@ -293,6 +294,8 @@ export default function App() {
           isOnline={isOnline}
           onRefreshHealth={checkHealth}
           onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
+          currentUser={currentUser}
+          onLogout={handleLogout}
         />
 
         <StepIndicator
@@ -330,7 +333,6 @@ export default function App() {
             onClearStops={handleClearStops}
             onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
             isLoading={isLoading}
-            onUseSampleAddresses={handleUseSampleAddresses}
           />
         )}
 
