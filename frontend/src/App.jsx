@@ -178,6 +178,7 @@ export default function App() {
   ).length;
   const hasValidOrigin = Boolean(originAddress && originAddress.trim().length > 0);
   const canGoToVerify = validStopsCount > 0 || manifest !== null || hasValidOrigin;
+  const canGoToDrive = manifest !== null;
   const maxAllowedStep = manifest ? 3 : (validStopsCount > 0 || hasValidOrigin) ? 2 : 1;
 
   // Step 1: Extract addresses using Gemini OCR (Appends to existing stops to avoid rescanning!)
