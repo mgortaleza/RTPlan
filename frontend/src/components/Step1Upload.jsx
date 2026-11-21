@@ -11,7 +11,7 @@ import {
   ListOrdered,
   Navigation,
   Trash2,
-  PlusCircle,
+  History,
 } from 'lucide-react';
 
 // Sample LA Addresses directly from C:\DEV\RTPlanner\TestImages for quick testing
@@ -34,6 +34,7 @@ export default function Step1Upload({
   onGoToVerify,
   onGoToDrive,
   onClearStops,
+  onOpenRecentRoutes,
   isLoading,
   onUseSampleAddresses,
 }) {
@@ -83,17 +84,17 @@ export default function Step1Upload({
       <div className="p-4 space-y-4">
         {/* Existing Route / Stops Status Card if already scanned */}
         {hasExistingStops && (
-          <div className="bg-emerald-950/40 border border-emerald-600/50 rounded-2xl p-4 shadow-md space-y-3">
+          <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">
+                  <h3 className="text-sm font-bold text-slate-900">
                     {stops.length} Stop{stops.length > 1 ? 's' : ''} Already Loaded
                   </h3>
-                  <p className="text-[11px] text-emerald-300">
+                  <p className="text-[11px] text-emerald-800">
                     Your scanned addresses are saved. No need to rescan!
                   </p>
                 </div>
@@ -103,7 +104,7 @@ export default function Step1Upload({
                 <button
                   type="button"
                   onClick={onClearStops}
-                  className="text-xs text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-950/40 transition-colors"
+                  className="text-xs text-rose-600 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
                   title="Clear existing stops"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -115,7 +116,7 @@ export default function Step1Upload({
               <button
                 type="button"
                 onClick={onGoToVerify}
-                className="flex-1 min-h-[42px] px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white text-xs font-bold flex items-center justify-center space-x-2 shadow-sm transition-all"
+                className="flex-1 min-h-[42px] px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-bold flex items-center justify-center space-x-2 shadow-sm transition-all"
               >
                 <ListOrdered className="w-3.5 h-3.5" />
                 <span>Continue to Verify & Edit ({stops.length})</span>
@@ -126,9 +127,9 @@ export default function Step1Upload({
                 <button
                   type="button"
                   onClick={onGoToDrive}
-                  className="min-h-[42px] px-3 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 active:scale-[0.98] text-white text-xs font-bold flex items-center justify-center space-x-1.5 transition-all"
+                  className="min-h-[42px] px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white text-xs font-bold flex items-center justify-center space-x-1.5 transition-all shadow-sm"
                 >
-                  <Navigation className="w-3.5 h-3.5 text-indigo-200" />
+                  <Navigation className="w-3.5 h-3.5 text-white" />
                   <span>View Route</span>
                 </button>
               )}
@@ -137,16 +138,16 @@ export default function Step1Upload({
         )}
 
         {/* Intro Banner */}
-        <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 shadow-sm">
+        <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 shadow-2xs">
           <div className="flex items-start space-x-3">
-            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-white">
+              <h2 className="text-sm font-bold text-slate-900">
                 {hasExistingStops ? 'Add More Screenshots (Optional)' : 'Upload Manifest Screenshots'}
               </h2>
-              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                 {hasExistingStops
                   ? 'Take photo screenshots to append additional delivery addresses to your current list, or proceed directly to verify.'
                   : 'Take photo screenshots of your delivery manifests or app tickets. Gemini OCR will extract all customer addresses.'}
@@ -163,8 +164,8 @@ export default function Step1Upload({
           onClick={() => fileInputRef.current?.click()}
           className={`relative border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[170px] ${
             isDragOver
-              ? 'border-indigo-400 bg-indigo-950/30 scale-[0.99]'
-              : 'border-slate-700 hover:border-slate-500 bg-slate-800/40 hover:bg-slate-800/70'
+              ? 'border-indigo-500 bg-indigo-50/50 scale-[0.99]'
+              : 'border-slate-300 hover:border-indigo-400 bg-slate-50/60 hover:bg-slate-50'
           }`}
         >
           <input
@@ -176,19 +177,19 @@ export default function Step1Upload({
             onChange={handleFileChange}
           />
 
-          <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
             <UploadCloud className="w-7 h-7" />
           </div>
 
-          <p className="text-sm font-medium text-white">
+          <p className="text-sm font-bold text-slate-900">
             Tap to select or take screenshots
           </p>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Supports multiple PNG, JPG, or WEBP photos
           </p>
 
-          <div className="mt-3 inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-700/60 text-[11px] text-slate-300 font-medium">
-            <ImagePlus className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="mt-3 inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-[11px] text-slate-600 font-semibold shadow-2xs">
+            <ImagePlus className="w-3.5 h-3.5 text-indigo-600" />
             <span>Photo Library & Camera</span>
           </div>
         </div>
@@ -197,13 +198,13 @@ export default function Step1Upload({
         {files.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Selected Photos ({files.length})
               </h3>
               <button
                 type="button"
                 onClick={clearAllFiles}
-                className="text-xs text-rose-400 hover:text-rose-300 font-medium py-1 px-2 transition-colors"
+                className="text-xs text-rose-600 hover:text-rose-700 font-semibold py-1 px-2 transition-colors"
               >
                 Clear all
               </button>
@@ -217,7 +218,7 @@ export default function Step1Upload({
                 return (
                   <div
                     key={`${file.name}-${idx}`}
-                    className="relative group rounded-xl overflow-hidden bg-slate-800 border border-slate-700/80 aspect-[4/3] flex flex-col justify-end"
+                    className="relative group rounded-xl overflow-hidden bg-slate-100 border border-slate-200 aspect-[4/3] flex flex-col justify-end shadow-xs"
                   >
                     <img
                       src={objectUrl}
@@ -225,7 +226,7 @@ export default function Step1Upload({
                       className="absolute inset-0 w-full h-full object-cover"
                       onLoad={() => URL.revokeObjectURL(objectUrl)}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
 
                     {/* Delete button */}
                     <button
@@ -234,17 +235,17 @@ export default function Step1Upload({
                         e.stopPropagation();
                         removeFile(idx);
                       }}
-                      className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-rose-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors shadow-md z-10"
+                      className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white/90 hover:bg-rose-600 hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm z-10"
                       aria-label="Remove photo"
                     >
                       <X className="w-4 h-4" />
                     </button>
 
                     <div className="relative p-2 z-10">
-                      <p className="text-[11px] font-medium text-white truncate">
+                      <p className="text-[11px] font-semibold text-white truncate">
                         {file.name}
                       </p>
-                      <p className="text-[10px] text-slate-400">{sizeKb} KB</p>
+                      <p className="text-[10px] text-slate-200">{sizeKb} KB</p>
                     </div>
                   </div>
                 );
@@ -253,44 +254,67 @@ export default function Step1Upload({
           </div>
         )}
 
-        {/* Quick Sample Data Option (Only if no stops currently) */}
-        {!hasExistingStops && (
-          <div className="pt-2 border-t border-slate-800/80">
+        {/* Quick Options (Recent Routes & Sample Data) */}
+        <div className="pt-2 border-t border-slate-200 space-y-2">
+          {onOpenRecentRoutes && (
             <button
               type="button"
-              onClick={() => onUseSampleAddresses(SAMPLE_TEST_ADDRESSES)}
-              className="w-full flex items-center justify-between p-3.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/60 text-left transition-all group"
+              onClick={onOpenRecentRoutes}
+              className="w-full flex items-center justify-between p-3.5 rounded-xl bg-indigo-50/70 hover:bg-indigo-50 border border-indigo-200 text-left transition-all group"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                  <History className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-white group-hover:text-emerald-400 transition-colors">
-                    Load Test Delivery Stops
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    Recall a Recent Route
                   </p>
-                  <p className="text-[11px] text-slate-400">
-                    Preload the 7 Los Angeles stops from the test manifest photos
+                  <p className="text-[11px] text-slate-500">
+                    Open a previously saved delivery manifest
                   </p>
                 </div>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
             </button>
-          </div>
-        )}
+          )}
+
+          {!hasExistingStops && (
+            <button
+              type="button"
+              onClick={() => onUseSampleAddresses(SAMPLE_TEST_ADDRESSES)}
+              className="w-full flex items-center justify-between p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200 text-left transition-all group"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                    Load Test Delivery Stops
+                  </p>
+                  <p className="text-[11px] text-slate-500">
+                    Preload the 7 Los Angeles stops from test manifest photos
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-700 transition-colors" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Sticky Bottom CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800/80 z-20 max-w-md mx-auto space-y-2">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-lg border-t border-slate-200 z-20 max-w-md mx-auto space-y-2">
         {files.length > 0 ? (
           <button
             type="button"
             disabled={isLoading}
             onClick={onExtract}
-            className={`w-full min-h-[50px] rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center space-x-2 transition-all shadow-lg ${
+            className={`w-full min-h-[50px] rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center space-x-2 transition-all shadow-md ${
               isLoading
-                ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
-                : 'bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white shadow-indigo-600/30'
+                ? 'bg-slate-200 text-slate-500 cursor-not-allowed shadow-none'
+                : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white shadow-indigo-600/20'
             }`}
           >
             {isLoading ? (
@@ -300,7 +324,7 @@ export default function Step1Upload({
               </>
             ) : (
               <>
-                <Sparkles className="w-5 h-5 text-indigo-300" />
+                <Sparkles className="w-5 h-5 text-indigo-200" />
                 <span>
                   {hasExistingStops
                     ? `Extract & Append (${files.length} Photo${files.length > 1 ? 's' : ''})`
@@ -313,7 +337,7 @@ export default function Step1Upload({
           <button
             type="button"
             onClick={onGoToVerify}
-            className="w-full min-h-[50px] rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center space-x-2 transition-all shadow-lg bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white shadow-emerald-600/30"
+            className="w-full min-h-[50px] rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center space-x-2 transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white shadow-emerald-600/20"
           >
             <ListOrdered className="w-4 h-4" />
             <span>Proceed to Verify ({stops.length} Stops)</span>
@@ -323,9 +347,9 @@ export default function Step1Upload({
           <button
             type="button"
             disabled
-            className="w-full min-h-[50px] rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center space-x-2 bg-slate-800 text-slate-500 cursor-not-allowed shadow-none"
+            className="w-full min-h-[50px] rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center space-x-2 bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none"
           >
-            <Sparkles className="w-5 h-5 text-slate-600" />
+            <Sparkles className="w-5 h-5 text-slate-400" />
             <span>Select Screenshots to Begin</span>
           </button>
         )}

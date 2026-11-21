@@ -128,4 +128,19 @@ public class RouteManifestService {
 
         return ManifestResponse.fromEntity(manifest);
     }
+
+    /**
+     * Retrieves the top 15 most recent route manifests along with their stops and links.
+     *
+     * @return List of ManifestResponse objects ordered newest to oldest
+     */
+    @Transactional(readOnly = true)
+    public List<ManifestResponse> getRecentManifests() {
+        List<RouteManifest> manifests = routeManifestRepository.findTop15ByOrderByManifestIdDesc();
+        manifests.forEach(m -> {
+            m.getStops().size();
+            m.getLinks().size();
+        });
+        return manifests.stream().map(ManifestResponse::fromEntity).toList();
+    }
 }

@@ -59,6 +59,15 @@ export async function getManifest(id) {
 }
 
 /**
+ * Retrieves the most recent route manifests from the backend database.
+ * @returns {Promise<Array>} List of ManifestResponse objects
+ */
+export async function getRecentManifests() {
+  const response = await apiClient.get('/api/routes/manifests');
+  return response.data;
+}
+
+/**
  * Fetches the list of active drivers from the database.
  * @returns {Promise<Array>} List of DriverResponse objects
  */

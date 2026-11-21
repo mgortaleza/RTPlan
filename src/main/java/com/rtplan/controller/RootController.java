@@ -21,6 +21,7 @@ public class RootController {
                         "drivers", "GET /api/drivers, POST /api/drivers",
                         "extractAddresses", "POST /api/routes/extract",
                         "optimizeRoute", "POST /api/routes/optimize",
+                        "recentManifests", "GET /api/routes/manifests",
                         "manifestById", "GET /api/routes/manifests/{id}",
                         "manifestsByDriver", "GET /api/routes/manifests/driver/{driverId}"
                 )

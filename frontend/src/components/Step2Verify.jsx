@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   MapPin,
   Trash2,
@@ -16,6 +16,8 @@ import {
   ArrowRight,
   ArrowLeft,
   Eye,
+  Check,
+  Flag,
 } from 'lucide-react';
 
 export default function Step2Verify({
@@ -34,6 +36,8 @@ export default function Step2Verify({
   onGoToDrive,
   isLoading,
 }) {
+  const [originNotice, setOriginNotice] = useState(null);
+
   const handleAddressChange = (index, value) => {
     setStops((prev) =>
       prev.map((stop, i) => {
@@ -77,6 +81,22 @@ export default function Step2Verify({
     });
   };
 
+  // Assign a scanned address as the origin depot/start location
+  const handleSetAsOrigin = (index) => {
+    const selectedStop = stops[index];
+    if (!selectedStop || !selectedStop.correctedAddress?.trim()) return;
+
+    const newOrigin = selectedStop.correctedAddress.trim();
+    setOriginAddress(newOrigin);
+
+    // Remove this address from the delivery stops list since it's now the starting origin
+    setStops((prev) => prev.filter((_, i) => i !== index));
+
+    // Show temporary confirmation
+    setOriginNotice(`Set "${newOrigin.length > 35 ? newOrigin.slice(0, 35) + '...' : newOrigin}" as Starting Origin.`);
+    setTimeout(() => setOriginNotice(null), 4000);
+  };
+
   const applyPresetOrigin = (preset) => {
     setOriginAddress(preset);
   };
@@ -89,29 +109,37 @@ export default function Step2Verify({
         {/* Navigation & Header Summary */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-white">Verify & Edit Addresses</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <h2 className="text-base font-bold text-slate-900">Verify & Edit Addresses</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
               Review and correct addresses before route optimization.
             </p>
           </div>
-          <div className="px-2.5 py-1 rounded-full bg-indigo-950/80 border border-indigo-800/80 text-indigo-300 text-xs font-semibold">
+          <div className="px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold">
             {totalStopCount} {totalStopCount === 1 ? 'Stop' : 'Stops'}
           </div>
         </div>
 
+        {/* Temporary Origin Assignment Confirmation Banner */}
+        {originNotice && (
+          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs flex items-center space-x-2 animate-in fade-in slide-in-from-top-1">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-semibold">{originNotice}</span>
+          </div>
+        )}
+
         {/* Quick shortcut if manifest already exists */}
         {manifest && onGoToDrive && (
-          <div className="bg-indigo-950/40 border border-indigo-700/50 rounded-xl p-3 flex items-center justify-between">
+          <div className="bg-indigo-50/70 border border-indigo-200 rounded-xl p-3 flex items-center justify-between shadow-2xs">
             <div className="flex items-center space-x-2">
-              <Navigation className="w-4 h-4 text-indigo-400" />
-              <span className="text-xs text-indigo-200">
+              <Navigation className="w-4 h-4 text-indigo-600" />
+              <span className="text-xs font-medium text-indigo-900">
                 Manifest #{manifest.manifestId} already generated
               </span>
             </div>
             <button
               type="button"
               onClick={onGoToDrive}
-              className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center space-x-1"
+              className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center space-x-1 shadow-2xs"
             >
               <span>View Route</span>
               <ArrowRight className="w-3 h-3" />
@@ -120,17 +148,17 @@ export default function Step2Verify({
         )}
 
         {/* Dispatch Settings (Driver & Date) */}
-        <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5 space-y-2.5">
+        <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5 shadow-2xs">
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1 flex items-center space-x-1">
-                <User className="w-3 h-3 text-indigo-400" />
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center space-x-1">
+                <User className="w-3 h-3 text-indigo-600" />
                 <span>Driver</span>
               </label>
               <select
                 value={selectedDriverId}
                 onChange={(e) => setSelectedDriverId(Number(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 shadow-2xs"
               >
                 {drivers.map((d) => (
                   <option key={d.driverId} value={d.driverId}>
@@ -141,29 +169,28 @@ export default function Step2Verify({
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1 flex items-center space-x-1">
-                <Calendar className="w-3 h-3 text-indigo-400" />
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center space-x-1">
+                <Calendar className="w-3 h-3 text-indigo-600" />
                 <span>Route Date</span>
               </label>
               <input
                 type="date"
                 value={routeDate}
                 onChange={(e) => setRouteDate(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-              >
-              </input>
+                className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 shadow-2xs"
+              />
             </div>
           </div>
         </div>
 
         {/* Starting Origin Address Input */}
-        <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5 space-y-2">
+        <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 space-y-2 shadow-2xs">
           <div className="flex items-center justify-between">
-            <label className="block text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center space-x-1.5">
-              <Building2 className="w-3.5 h-3.5" />
+            <label className="block text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center space-x-1.5">
+              <Building2 className="w-3.5 h-3.5 text-emerald-600" />
               <span>Starting Origin (Depot / Start Location)</span>
             </label>
-            <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
               Stop #1
             </span>
           </div>
@@ -174,24 +201,24 @@ export default function Step2Verify({
               value={originAddress}
               onChange={(e) => setOriginAddress(e.target.value)}
               placeholder="e.g. 200 Medical Plaza, Los Angeles, CA 90095"
-              className="w-full bg-slate-900 border border-emerald-500/40 focus:border-emerald-400 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-400/30"
+              className="w-full bg-white border border-emerald-300 focus:border-emerald-600 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
             />
           </div>
 
           {/* Quick presets */}
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            <span className="text-[10px] text-slate-500 self-center mr-1">Presets:</span>
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <span className="text-[10px] text-slate-500 mr-1">Presets:</span>
             <button
               type="button"
               onClick={() => applyPresetOrigin('200 Medical Plaza, Los Angeles, CA 90095')}
-              className="text-[10px] px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+              className="text-[10px] px-2 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium shadow-2xs"
             >
               UCLA Plaza
             </button>
             <button
               type="button"
               onClick={() => applyPresetOrigin('Current Location')}
-              className="text-[10px] px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+              className="text-[10px] px-2 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium shadow-2xs"
             >
               GPS Current
             </button>
@@ -201,22 +228,22 @@ export default function Step2Verify({
         {/* Extracted Stops List */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
               Delivery Stops ({stops.length})
             </h3>
-            <span className="text-[10px] text-slate-400">
-              Drag or tap arrows to reorder
+            <span className="text-[10px] text-slate-500">
+              Tap arrows or Set Origin
             </span>
           </div>
 
           {stops.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-slate-800/30 border border-slate-800">
-              <MapPin className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-              <p className="text-xs text-slate-400">No delivery stops added yet.</p>
+            <div className="p-8 text-center rounded-2xl bg-slate-50 border border-slate-200">
+              <MapPin className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <p className="text-xs text-slate-600 font-medium">No delivery stops added yet.</p>
               <button
                 type="button"
                 onClick={handleAddStop}
-                className="mt-3 px-3 py-1.5 rounded-xl bg-indigo-600/30 text-indigo-300 text-xs font-medium hover:bg-indigo-600/50 transition-colors inline-flex items-center space-x-1"
+                className="mt-3 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition-colors inline-flex items-center space-x-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add first stop manually</span>
@@ -233,32 +260,42 @@ export default function Step2Verify({
                     key={`stop-${index}`}
                     className={`rounded-2xl p-3 border transition-all ${
                       isEdited
-                        ? 'bg-slate-800/90 border-indigo-500/50 shadow-sm'
-                        : 'bg-slate-800/60 border-slate-700/60'
+                        ? 'bg-indigo-50/40 border-indigo-200 shadow-xs'
+                        : 'bg-white border-slate-200 shadow-xs'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
-                        <span className="w-5 h-5 rounded-md bg-indigo-600/30 text-indigo-300 text-[10px] font-bold flex items-center justify-center">
+                        <span className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center">
                           {stopNumber}
                         </span>
-                        <span className="text-[11px] font-semibold text-slate-300">
+                        <span className="text-[11px] font-bold text-slate-800">
                           Stop #{stopNumber}
                         </span>
                         {isEdited && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-900/60 text-indigo-300 border border-indigo-700/50">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200">
                             Edited
                           </span>
                         )}
                       </div>
 
-                      {/* Stop Controls (Reorder & Delete) */}
+                      {/* Stop Controls: Set as Origin, Move, Delete */}
                       <div className="flex items-center space-x-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSetAsOrigin(index)}
+                          className="px-2 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-bold flex items-center space-x-1 transition-colors"
+                          title="Assign this scanned address as the starting origin depot"
+                        >
+                          <Building2 className="w-3 h-3 text-emerald-600" />
+                          <span>Set Origin</span>
+                        </button>
+
                         <button
                           type="button"
                           disabled={index === 0}
                           onClick={() => handleMoveStop(index, -1)}
-                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="p-1 rounded text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Move Up"
                         >
                           <ArrowUp className="w-3.5 h-3.5" />
@@ -267,7 +304,7 @@ export default function Step2Verify({
                           type="button"
                           disabled={index === stops.length - 1}
                           onClick={() => handleMoveStop(index, 1)}
-                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="p-1 rounded text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Move Down"
                         >
                           <ArrowDown className="w-3.5 h-3.5" />
@@ -275,7 +312,7 @@ export default function Step2Verify({
                         <button
                           type="button"
                           onClick={() => handleDeleteStop(index)}
-                          className="p-1 rounded text-rose-400 hover:text-rose-300 ml-1"
+                          className="p-1 rounded text-rose-500 hover:text-rose-700 hover:bg-rose-50 ml-0.5"
                           title="Delete Stop"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -289,18 +326,18 @@ export default function Step2Verify({
                       value={stop.correctedAddress}
                       onChange={(e) => handleAddressChange(index, e.target.value)}
                       placeholder="Enter street address, city, state, zip..."
-                      className="w-full bg-slate-900/80 border border-slate-700 focus:border-indigo-400 rounded-xl p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-400/30 resize-none"
+                      className="w-full bg-slate-50/80 border border-slate-200 focus:bg-white focus:border-indigo-500 rounded-xl p-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none font-medium"
                     />
 
                     {/* Original OCR text reference */}
                     {stop.originalExtractedText && stop.originalExtractedText !== stop.correctedAddress && (
-                      <div className="mt-1 flex items-center space-x-1 text-[10px] text-slate-400">
-                        <span className="text-slate-500">OCR:</span>
+                      <div className="mt-1 flex items-center space-x-1 text-[10px] text-slate-500">
+                        <span className="font-semibold text-slate-400">OCR:</span>
                         <span className="truncate">{stop.originalExtractedText}</span>
                         <button
                           type="button"
                           onClick={() => handleAddressChange(index, stop.originalExtractedText)}
-                          className="text-indigo-400 hover:underline shrink-0 ml-1"
+                          className="text-indigo-600 hover:underline font-semibold shrink-0 ml-1"
                           title="Revert to original OCR text"
                         >
                           Revert
@@ -317,24 +354,24 @@ export default function Step2Verify({
           <button
             type="button"
             onClick={handleAddStop}
-            className="w-full min-h-[46px] rounded-2xl border-2 border-dashed border-slate-700 hover:border-indigo-400 bg-slate-800/40 hover:bg-slate-800/80 text-slate-300 hover:text-indigo-400 font-semibold text-xs flex items-center justify-center space-x-2 transition-all active:scale-[0.99]"
+            className="w-full min-h-[46px] rounded-2xl border-2 border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50 hover:bg-indigo-50/40 text-slate-700 hover:text-indigo-700 font-bold text-xs flex items-center justify-center space-x-2 transition-all active:scale-[0.99]"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 text-indigo-600" />
             <span>Add Delivery Stop Manually</span>
           </button>
         </div>
       </div>
 
       {/* Sticky Bottom Actions Bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800/80 z-20 max-w-md mx-auto space-y-2">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-lg border-t border-slate-200 z-20 max-w-md mx-auto space-y-2">
         <button
           type="button"
           disabled={totalStopCount === 0 || isLoading}
           onClick={onOptimize}
-          className={`w-full min-h-[50px] rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center space-x-2 transition-all shadow-lg ${
+          className={`w-full min-h-[50px] rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center space-x-2 transition-all shadow-md ${
             totalStopCount === 0 || isLoading
-              ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
-              : 'bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white shadow-emerald-600/30'
+              ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+              : 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white shadow-emerald-600/20'
           }`}
         >
           {isLoading ? (
@@ -344,7 +381,7 @@ export default function Step2Verify({
             </>
           ) : (
             <>
-              <Navigation className="w-5 h-5 text-emerald-200" />
+              <Navigation className="w-5 h-5 text-emerald-100" />
               <span>
                 {manifest ? 'Re-Optimize Route' : 'Optimize Route'} ({totalStopCount} {totalStopCount === 1 ? 'Stop' : 'Stops'})
               </span>
@@ -357,7 +394,7 @@ export default function Step2Verify({
             type="button"
             onClick={onBackToUpload}
             disabled={isLoading}
-            className="flex-1 min-h-[38px] rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold flex items-center justify-center space-x-1 transition-colors"
+            className="flex-1 min-h-[38px] rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center space-x-1 transition-colors border border-slate-200"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Upload</span>
@@ -368,9 +405,9 @@ export default function Step2Verify({
               type="button"
               onClick={onGoToDrive}
               disabled={isLoading}
-              className="flex-1 min-h-[38px] rounded-xl bg-indigo-900/60 hover:bg-indigo-900 text-indigo-300 hover:text-white border border-indigo-700/60 text-xs font-semibold flex items-center justify-center space-x-1 transition-colors"
+              className="flex-1 min-h-[38px] rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold flex items-center justify-center space-x-1 transition-colors shadow-2xs"
             >
-              <Eye className="w-3.5 h-3.5" />
+              <Eye className="w-3.5 h-3.5 text-indigo-600" />
               <span>View Active Route</span>
             </button>
           )}

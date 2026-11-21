@@ -15,7 +15,7 @@ export default function StepIndicator({
   canGoToDrive = false,
 }) {
   return (
-    <nav aria-label="Progress" className="px-4 py-3 bg-slate-900 border-b border-slate-800/80">
+    <nav aria-label="Progress" className="px-4 py-3 bg-slate-50 border-b border-slate-200">
       <ol className="flex items-center justify-between">
         {STEPS.map((step, idx) => {
           const Icon = step.icon;
@@ -23,7 +23,7 @@ export default function StepIndicator({
           const stepNumber = step.id;
           const currentNumber = currentStep === 'upload' ? 1 : currentStep === 'verify' ? 2 : 3;
           const isCompleted = stepNumber < currentNumber;
-          
+
           const isClickable =
             step.id === 1
               ? true
@@ -38,40 +38,44 @@ export default function StepIndicator({
                 disabled={!isClickable}
                 onClick={() => isClickable && onStepClick(step.key)}
                 className={`w-full flex items-center text-left py-1 group transition-all ${
-                  !isClickable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:opacity-90'
+                  !isClickable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'
                 }`}
                 title={!isClickable ? 'Complete earlier steps first' : `Go to Step ${step.id}: ${step.label}`}
               >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-all ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-all shadow-sm ${
                     isCompleted
-                      ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
+                      ? 'bg-emerald-600 text-white shadow-emerald-600/20'
                       : isCurrent
-                      ? 'bg-indigo-600 text-white ring-4 ring-indigo-600/20'
+                      ? 'bg-indigo-600 text-white ring-4 ring-indigo-100'
                       : isClickable
-                      ? 'bg-slate-800 text-indigo-300 border border-indigo-700/60'
-                      : 'bg-slate-800 text-slate-500'
+                      ? 'bg-white text-indigo-700 border border-indigo-200 group-hover:border-indigo-400 group-hover:bg-indigo-50/50'
+                      : 'bg-slate-200 text-slate-400'
                   }`}
                 >
                   {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : step.id}
                 </div>
                 <div className="ml-2.5 hidden min-[360px]:block">
                   <span
-                    className={`block text-[11px] font-semibold uppercase tracking-wider ${
+                    className={`block text-[11px] font-bold uppercase tracking-wider ${
                       isCurrent
-                        ? 'text-indigo-400'
+                        ? 'text-indigo-600'
                         : isCompleted
-                        ? 'text-slate-300'
+                        ? 'text-emerald-700'
                         : isClickable
-                        ? 'text-slate-400 group-hover:text-slate-200'
-                        : 'text-slate-600'
+                        ? 'text-slate-600 group-hover:text-slate-900'
+                        : 'text-slate-400'
                     }`}
                   >
                     Step {step.id}
                   </span>
                   <span
-                    className={`block text-xs font-medium leading-none ${
-                      isCurrent ? 'text-white' : isClickable ? 'text-slate-300' : 'text-slate-500'
+                    className={`block text-xs font-semibold leading-none ${
+                      isCurrent
+                        ? 'text-slate-900 font-bold'
+                        : isClickable
+                        ? 'text-slate-700'
+                        : 'text-slate-400'
                     }`}
                   >
                     {step.label}
@@ -82,7 +86,7 @@ export default function StepIndicator({
               {idx < STEPS.length - 1 && (
                 <div
                   className={`h-0.5 flex-1 mx-2 transition-colors ${
-                    stepNumber < currentNumber ? 'bg-emerald-500/80' : 'bg-slate-800'
+                    stepNumber < currentNumber ? 'bg-emerald-500' : 'bg-slate-200'
                   }`}
                 />
               )}

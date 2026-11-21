@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   ImagePlus,
   AlertCircle,
+  History,
 } from 'lucide-react';
 import { loadFromStorage, saveToStorage } from '../utils/storage';
 
@@ -24,6 +25,7 @@ export default function Step3Drive({
   onResetWorkflow,
   onBackToEdit,
   onBackToUpload,
+  onOpenRecentRoutes,
 }) {
   const [copied, setCopied] = useState(false);
   const [showAllStops, setShowAllStops] = useState(false);
@@ -99,48 +101,59 @@ export default function Step3Drive({
     <div className="flex flex-col flex-1 pb-36">
       <div className="p-4 space-y-4">
         {/* Route Summary Card */}
-        <div className="bg-gradient-to-br from-indigo-950/60 via-slate-800/80 to-slate-900 border border-indigo-700/50 rounded-2xl p-4 shadow-lg space-y-3">
+        <div className="bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 border border-indigo-200 rounded-3xl p-4 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
-                <Compass className="w-4 h-4" />
+            <div className="flex items-center space-x-2.5">
+              <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-xs">
+                <Compass className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-400">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-700">
                   Manifest #{manifestId}
                 </span>
-                <h2 className="text-base font-bold text-white leading-tight">Optimized Delivery Plan</h2>
+                <h2 className="text-base font-bold text-slate-900 leading-tight">Optimized Delivery Plan</h2>
               </div>
             </div>
 
-            <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold">
+            <span className="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold">
               {status || 'OPTIMIZED'}
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-700/60 text-center">
-            <div className="bg-slate-900/60 rounded-xl p-2">
-              <span className="block text-[10px] text-slate-400">Total Stops</span>
-              <span className="text-sm font-bold text-white">{stops.length}</span>
+          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 text-center">
+            <div className="bg-white rounded-xl p-2 border border-slate-200/80 shadow-2xs">
+              <span className="block text-[10px] font-semibold text-slate-500">Total Stops</span>
+              <span className="text-sm font-extrabold text-slate-900">{stops.length}</span>
             </div>
-            <div className="bg-slate-900/60 rounded-xl p-2">
-              <span className="block text-[10px] text-slate-400">Nav Legs</span>
-              <span className="text-sm font-bold text-indigo-400">{links.length}</span>
+            <div className="bg-white rounded-xl p-2 border border-slate-200/80 shadow-2xs">
+              <span className="block text-[10px] font-semibold text-slate-500">Nav Legs</span>
+              <span className="text-sm font-extrabold text-indigo-600">{links.length}</span>
             </div>
-            <div className="bg-slate-900/60 rounded-xl p-2">
-              <span className="block text-[10px] text-slate-400">Date</span>
-              <span className="text-[11px] font-bold text-slate-200 truncate block">
+            <div className="bg-white rounded-xl p-2 border border-slate-200/80 shadow-2xs">
+              <span className="block text-[10px] font-semibold text-slate-500">Date</span>
+              <span className="text-[11px] font-bold text-slate-800 truncate block">
                 {routeDate || 'Today'}
               </span>
             </div>
           </div>
 
           {driverName && (
-            <div className="flex items-center justify-between text-xs text-slate-300 pt-1 border-t border-slate-800">
+            <div className="flex items-center justify-between text-xs text-slate-600 pt-1 border-t border-slate-100">
               <div className="flex items-center space-x-1.5">
-                <User className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Driver: <strong className="text-white">{driverName}</strong></span>
+                <User className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Driver: <strong className="text-slate-900">{driverName}</strong></span>
               </div>
+
+              {onOpenRecentRoutes && (
+                <button
+                  type="button"
+                  onClick={onOpenRecentRoutes}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center space-x-1"
+                >
+                  <History className="w-3 h-3" />
+                  <span>Other Routes</span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -150,20 +163,20 @@ export default function Step3Drive({
           <button
             type="button"
             onClick={handleCopyAllLinks}
-            className={`flex-1 min-h-[44px] rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition-all shadow-sm ${
+            className={`flex-1 min-h-[44px] rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition-all shadow-xs ${
               copied
                 ? 'bg-emerald-600 text-white'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300'
             }`}
           >
             {copied ? (
               <>
                 <Check className="w-4 h-4 text-white" />
-                <span>Copied All Links!</span>
+                <span>Copied All Links to Clipboard!</span>
               </>
             ) : (
               <>
-                <Copy className="w-4 h-4 text-indigo-400" />
+                <Copy className="w-4 h-4 text-indigo-600" />
                 <span>Copy All Maps Links</span>
               </>
             )}
@@ -173,11 +186,11 @@ export default function Step3Drive({
         {/* Chunked Google Maps Legs Section */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
-              <Navigation className="w-3.5 h-3.5 text-indigo-400" />
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+              <Navigation className="w-3.5 h-3.5 text-indigo-600" />
               <span>Navigation Legs (9 Stops Max Each)</span>
             </h3>
-            <span className="text-[10px] text-slate-400">
+            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
               {openedLegs.length}/{links.length} Started
             </span>
           </div>
@@ -194,10 +207,10 @@ export default function Step3Drive({
             return (
               <div
                 key={link.linkId || idx}
-                className={`bg-slate-800/80 border rounded-2xl p-4 shadow-md space-y-3 transition-all ${
+                className={`bg-white border rounded-2xl p-4 shadow-sm space-y-3 transition-all ${
                   isOpened
-                    ? 'border-emerald-500/50 bg-slate-800/95 ring-1 ring-emerald-500/20'
-                    : 'border-slate-700/80'
+                    ? 'border-emerald-300 bg-emerald-50/20 ring-1 ring-emerald-200'
+                    : 'border-slate-200'
                 }`}
               >
                 {/* Leg Header */}
@@ -206,52 +219,52 @@ export default function Step3Drive({
                     <span
                       className={`w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center ${
                         isOpened
-                          ? 'bg-emerald-600/30 text-emerald-400'
-                          : 'bg-indigo-600/30 text-indigo-400'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-indigo-100 text-indigo-700'
                       }`}
                     >
                       {chunkNum}
                     </span>
-                    <span className="text-sm font-bold text-white">
+                    <span className="text-sm font-bold text-slate-900">
                       Leg {chunkNum}: Stops {legStartIdx + 1}–{legEndIdx + 1}
                     </span>
                   </div>
 
                   <div className="flex items-center space-x-1.5">
                     {isOpened && (
-                      <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-full font-semibold">
+                      <span className="text-[10px] text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full font-bold">
                         ✓ In Progress
                       </span>
                     )}
-                    <span className="text-[11px] text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-700/60 font-medium">
+                    <span className="text-[11px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 font-semibold">
                       {stopCountInLeg} Stops
                     </span>
                   </div>
                 </div>
 
                 {/* Start & End Points */}
-                <div className="bg-slate-900/70 rounded-xl p-3 space-y-2 text-xs">
+                <div className="bg-slate-50/90 rounded-xl p-3 space-y-2 text-xs border border-slate-100">
                   <div className="flex items-start space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 mt-1.5" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-1.5" />
                     <div className="min-w-0 flex-1">
-                      <span className="text-[10px] uppercase font-semibold text-emerald-400 block">
+                      <span className="text-[10px] uppercase font-bold text-emerald-700 block">
                         Start (Stop #{legStartIdx + 1})
                       </span>
-                      <p className="text-slate-200 text-xs truncate">
+                      <p className="text-slate-800 text-xs font-medium truncate">
                         {startStop?.correctedAddress || 'Origin'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="border-l border-dashed border-slate-700 ml-1 h-2" />
+                  <div className="border-l border-dashed border-slate-300 ml-1 h-2" />
 
                   <div className="flex items-start space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0 mt-1.5" />
+                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0 mt-1.5" />
                     <div className="min-w-0 flex-1">
-                      <span className="text-[10px] uppercase font-semibold text-rose-400 block">
+                      <span className="text-[10px] uppercase font-bold text-rose-700 block">
                         End (Stop #{legEndIdx + 1})
                       </span>
-                      <p className="text-slate-200 text-xs truncate">
+                      <p className="text-slate-800 text-xs font-medium truncate">
                         {endStop?.correctedAddress || 'Destination'}
                       </p>
                     </div>
@@ -264,10 +277,10 @@ export default function Step3Drive({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => handleOpenMaps(chunkNum)}
-                  className={`w-full min-h-[48px] rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-lg transition-all active:scale-[0.98] ${
+                  className={`w-full min-h-[48px] rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-sm transition-all active:scale-[0.98] ${
                     isOpened
-                      ? 'bg-slate-700 hover:bg-slate-600 text-emerald-300 shadow-slate-900/30 border border-emerald-500/40'
-                      : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
+                      ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs'
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
                   }`}
                 >
                   <Navigation className="w-4 h-4 fill-current" />
@@ -280,36 +293,36 @@ export default function Step3Drive({
         </div>
 
         {/* Collapsible Ordered Stops List */}
-        <div className="bg-slate-800/50 border border-slate-700/60 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
           <button
             type="button"
             onClick={() => setShowAllStops((prev) => !prev)}
-            className="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-800/80 transition-colors"
+            className="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
           >
             <div className="flex items-center space-x-2">
-              <MapPin className="w-4 h-4 text-indigo-400" />
-              <span className="text-xs font-semibold text-white">
+              <MapPin className="w-4 h-4 text-indigo-600" />
+              <span className="text-xs font-bold text-slate-800">
                 All Ordered Stops ({stops.length})
               </span>
             </div>
             {showAllStops ? (
-              <ChevronUp className="w-4 h-4 text-slate-400" />
+              <ChevronUp className="w-4 h-4 text-slate-500" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-slate-400" />
+              <ChevronDown className="w-4 h-4 text-slate-500" />
             )}
           </button>
 
           {showAllStops && (
-            <div className="p-3 pt-0 border-t border-slate-700/60 divide-y divide-slate-800 space-y-2">
+            <div className="p-3 pt-0 border-t border-slate-200 divide-y divide-slate-100 space-y-2">
               {stops.map((stop, idx) => (
                 <div key={stop.stopId || idx} className="pt-2 first:pt-1 flex items-start space-x-2.5">
-                  <div className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                     {stop.optimizedSequence !== undefined ? stop.optimizedSequence + 1 : idx + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-white leading-snug">{stop.correctedAddress}</p>
+                    <p className="text-xs font-semibold text-slate-800 leading-snug">{stop.correctedAddress}</p>
                     {stop.latitude && stop.longitude && (
-                      <span className="text-[10px] text-slate-500 font-mono mt-0.5 block">
+                      <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
                         {Number(stop.latitude).toFixed(5)}, {Number(stop.longitude).toFixed(5)}
                       </span>
                     )}
@@ -318,7 +331,7 @@ export default function Step3Drive({
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.correctedAddress)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white transition-colors"
+                    className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors"
                     title="Open stop in Google Maps"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -332,15 +345,15 @@ export default function Step3Drive({
 
       {/* Confirmation Modal for Resetting Route */}
       {showResetConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
                 <AlertCircle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">Start New Route?</h3>
-                <p className="text-xs text-slate-300 mt-1">
+                <h3 className="text-sm font-bold text-slate-900">Start New Route?</h3>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                   This will clear your current manifest and stops. Are you sure you want to start over?
                 </p>
               </div>
@@ -349,7 +362,7 @@ export default function Step3Drive({
               <button
                 type="button"
                 onClick={() => setShowResetConfirm(false)}
-                className="flex-1 min-h-[42px] rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors"
+                className="flex-1 min-h-[42px] rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors border border-slate-200"
               >
                 Cancel
               </button>
@@ -359,7 +372,7 @@ export default function Step3Drive({
                   setShowResetConfirm(false);
                   onResetWorkflow();
                 }}
-                className="flex-1 min-h-[42px] rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors"
+                className="flex-1 min-h-[42px] rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors shadow-sm"
               >
                 Yes, Start New
               </button>
@@ -369,12 +382,12 @@ export default function Step3Drive({
       )}
 
       {/* Sticky Bottom Actions */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800/80 z-20 max-w-md mx-auto space-y-2">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-lg border-t border-slate-200 z-20 max-w-md mx-auto space-y-2">
         <div className="flex gap-2">
           <button
             type="button"
             onClick={onBackToEdit}
-            className="flex-1 min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-indigo-600/20"
+            className="flex-1 min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-indigo-600/20"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>Edit Address List</span>
@@ -384,10 +397,10 @@ export default function Step3Drive({
             <button
               type="button"
               onClick={onBackToUpload}
-              className="px-3 min-h-[44px] rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold text-xs flex items-center justify-center space-x-1 transition-colors"
+              className="px-3 min-h-[44px] rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 font-bold text-xs flex items-center justify-center space-x-1 transition-colors border border-slate-200"
               title="Add more photos"
             >
-              <ImagePlus className="w-3.5 h-3.5" />
+              <ImagePlus className="w-3.5 h-3.5 text-indigo-600" />
               <span className="hidden min-[360px]:inline">Add Photos</span>
             </button>
           )}
@@ -396,7 +409,7 @@ export default function Step3Drive({
         <button
           type="button"
           onClick={() => setShowResetConfirm(true)}
-          className="w-full py-1.5 text-xs font-semibold text-slate-400 hover:text-rose-400 transition-colors flex items-center justify-center space-x-1"
+          className="w-full py-1.5 text-xs font-bold text-slate-500 hover:text-rose-600 transition-colors flex items-center justify-center space-x-1"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>New Route (Start Fresh)</span>

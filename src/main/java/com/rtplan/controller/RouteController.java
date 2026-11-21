@@ -62,6 +62,18 @@ public class RouteController {
     }
 
     /**
+     * Retrieves recent saved route manifests with their ordered stops and chunked navigation links.
+     *
+     * @return List of recent ManifestResponses
+     */
+    @GetMapping(value = "/manifests", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ManifestResponse>> getRecentManifests() {
+        log.info("Fetching recent route manifests");
+        List<ManifestResponse> manifests = routeManifestService.getRecentManifests();
+        return ResponseEntity.ok(manifests);
+    }
+
+    /**
      * Retrieves a saved manifest by ID with its ordered stops and chunked navigation links.
      *
      * @param id Manifest ID

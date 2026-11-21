@@ -5,6 +5,7 @@ import ErrorBanner from './components/ErrorBanner';
 import Step1Upload from './components/Step1Upload';
 import Step2Verify from './components/Step2Verify';
 import Step3Drive from './components/Step3Drive';
+import RecentRoutesModal from './components/RecentRoutesModal';
 import {
   extractAddresses,
   optimizeRoute,
@@ -49,6 +50,7 @@ export default function App() {
   const [infoMessage, setInfoMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+  const [isRecentModalOpen, setIsRecentModalOpen] = useState(false);
 
   // Sync state changes to localStorage
   useEffect(() => {
@@ -182,6 +184,47 @@ export default function App() {
     }
   };
 
+  // Recall a recent route manifest from database
+  const handleSelectRecentManifest = (selectedManifest) => {
+    if (!selectedManifest) return;
+
+    setManifest(selectedManifest);
+
+    if (selectedManifest.driverId) {
+      setSelectedDriverId(selectedManifest.driverId);
+    }
+
+    if (selectedManifest.routeDate) {
+      setRouteDate(selectedManifest.routeDate);
+    }
+
+    // Populate stops and origin
+    if (selectedManifest.stops && selectedManifest.stops.length > 0) {
+      const sortedStops = [...selectedManifest.stops].sort(
+        (a, b) => (a.optimizedSequence ?? 0) - (b.optimizedSequence ?? 0)
+      );
+
+      // First stop is origin depot
+      setOriginAddress(sortedStops[0].correctedAddress);
+
+      // Remaining stops
+      const deliveryStops = sortedStops.slice(1).map((s) => ({
+        originalExtractedText: s.originalExtractedText || s.correctedAddress,
+        correctedAddress: s.correctedAddress,
+        isManuallyEdited: Boolean(s.isManuallyEdited),
+        latitude: s.latitude,
+        longitude: s.longitude,
+        optimizedSequence: s.optimizedSequence,
+      }));
+
+      setStops(deliveryStops);
+    }
+
+    setErrorMessage(null);
+    setIsRecentModalOpen(false);
+    setCurrentStep('drive');
+  };
+
   // Step 2: Optimize route with Google Routes API & Geocoding
   const handleOptimize = async () => {
     const validStops = stops
@@ -243,10 +286,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center">
-      {/* Mobile-first centered container */}
-      <main className="w-full max-w-md min-h-screen bg-slate-900 shadow-2xl flex flex-col border-x border-slate-800 relative">
-        <Header isOnline={isOnline} onRefreshHealth={checkHealth} />
+    <div className="min-h-screen bg-slate-100 flex flex-col items-center">
+      {/* Mobile-first centered container with crisp light theme */}
+      <main className="w-full max-w-md min-h-screen bg-white shadow-xl flex flex-col border-x border-slate-200 relative">
+        <Header
+          isOnline={isOnline}
+          onRefreshHealth={checkHealth}
+          onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
+        />
 
         <StepIndicator
           currentStep={currentStep}
@@ -281,6 +328,7 @@ export default function App() {
               setCurrentStep('drive');
             }}
             onClearStops={handleClearStops}
+            onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
             isLoading={isLoading}
             onUseSampleAddresses={handleUseSampleAddresses}
           />
@@ -323,8 +371,16 @@ export default function App() {
               setErrorMessage(null);
               setCurrentStep('upload');
             }}
+            onOpenRecentRoutes={() => setIsRecentModalOpen(true)}
           />
         )}
+
+        {/* Modal for Recalling Recent Routes */}
+        <RecentRoutesModal
+          isOpen={isRecentModalOpen}
+          onClose={() => setIsRecentModalOpen(false)}
+          onSelectManifest={handleSelectRecentManifest}
+        />
       </main>
     </div>
   );
