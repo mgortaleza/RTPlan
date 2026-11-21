@@ -8,9 +8,7 @@ spring:
     name: rtplan-backend
 
   datasource:
-    url: jdbc:sqlserver://${DB_HOST:db1.ads.netyx.net}:${DB_PORT:1433};databaseName=${DB_NAME:RTPlan};encrypt=true;trustServerCertificate=true;
-    username: ${DB_USERNAME:rtplan_user}
-    password: ${DB_PASSWORD:RTPlanSecurePass2026!}
+    url: jdbc:sqlserver://${DB_HOST:db1.ads.netyx.net}:${DB_PORT:1433};databaseName=${DB_NAME:RTPlan};integratedSecurity=true;encrypt=true;trustServerCertificate=true;
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     hikari:
       connection-timeout: 30000

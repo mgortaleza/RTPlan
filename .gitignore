@@ -36,5 +36,6 @@ build/
 
 ### OS & Temp ###
 *.log
+*.dll
 .DS_Store
 Thumbs.db

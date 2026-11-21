@@ -12,14 +12,14 @@ Spring Boot 4.x REST API middleman for multi-stop logistics routing. Designed to
 4. **Google Maps Deep Link Chunking**:
    Splits routes into deep links where each link contains at most 1 origin and 9 destinations (10 stops max per URL), carrying over the final stop of chunk $N$ as the origin of chunk $N+1$.
 5. **Persistence on Microsoft SQL Server**:
-   Connects to SQL Server at `db1.ads.netyx.net` using Spring Data JPA.
+   Connects to SQL Server at `db1.ads.netyx.net` using Windows Authentication (Integrated Security) and Spring Data JPA.
 
 ---
 
 ## Tech Stack
 - **Java 25 LTS**
 - **Spring Boot 4.2.0** (`spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`)
-- **Microsoft SQL Server JDBC Driver** (`com.microsoft.sqlserver:mssql-jdbc`)
+- **Microsoft SQL Server JDBC Driver** (`com.microsoft.sqlserver:mssql-jdbc`) with Windows Authentication (`mssql-jdbc_auth`)
 - **Project Lombok** (1.18.48)
 - **Jackson 3** (`tools.jackson`)
 - **Spring 7 RestClient**
@@ -35,8 +35,6 @@ Configure the following environment variables or update `src/main/resources/appl
 | `DB_HOST` | `db1.ads.netyx.net` | Microsoft SQL Server host |
 | `DB_PORT` | `1433` | SQL Server port |
 | `DB_NAME` | `RTPlan` | SQL Server database name |
-| `DB_USERNAME` | `rtplan_user` | SQL Server user |
-| `DB_PASSWORD` | `RTPlanSecurePass2026!` | SQL Server password |
 | `GEMINI_API_KEY` | - | Google Gemini API key |
 | `GOOGLE_MAPS_API_KEY` | - | Google Maps / Routes API key |
 
